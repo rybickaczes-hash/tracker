@@ -61,6 +61,8 @@
   .btn { border:0; border-radius:14px; padding:15px; font:inherit; font-weight:650; background:var(--card2); color:var(--text); }
   .btn.pri { background:#4f8cff; color:#fff; }
   .btn.dan { background:transparent; color:#ff5d73; }
+  .foot { text-align:center; margin-top:28px; }
+  .foot button { border:0; background:none; color:var(--muted); font:inherit; font-size:13px; text-decoration:underline; }
   .setup { min-height:70vh; display:flex; flex-direction:column; justify-content:center; gap:14px; }
   .setup .btn { font-size:20px; padding:18px; }
 </style>
@@ -145,7 +147,8 @@ function render() {
   if (!$('grid')) {
     $('app').innerHTML = '<header><h1 id="hi"></h1><span class="date" id="date"></span></header>' +
       '<div class="warn" id="warn">The last save to Notion failed — retrying in a few minutes.</div>' +
-      '<div class="grid" id="grid"></div><h2>Today &amp; yesterday</h2><div class="list" id="list"></div>';
+      '<div class="grid" id="grid"></div><h2>Today &amp; yesterday</h2><div class="list" id="list"></div>' +
+      '<div class="foot"><button id="switch">Not ' + NAMES[WHO] + '? Switch</button></div>';
   }
   $('hi').textContent = 'Hi, ' + NAMES[WHO];
   $('date').textContent = new Date(now()).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
@@ -257,6 +260,7 @@ async function refresh() {
 document.addEventListener('click', e => {
   const w = e.target.closest('[data-who]');
   if (w) { WHO = w.dataset.who; lsSet('who', WHO); S = JSON.parse(lsGet('state:' + WHO) || 'null') || { now: Date.now(), running: {}, sessions: [], sync: null }; loaded = false; $('app').innerHTML = ''; render(); return refresh(); }
+  if (e.target.id === 'switch') { if (confirm('Switch to the other person?')) { WHO = null; lsSet('who', ''); $('app').innerHTML = ''; render(); } return; }
   const t = e.target.closest('[data-k]'); if (t) return tap(t.dataset.k);
   const d = e.target.closest('[data-del]'); if (d) return del(d.dataset.del, d.dataset.d);
 });
