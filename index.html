@@ -72,6 +72,27 @@
   .btn { border:0; border-radius:14px; padding:15px; font:inherit; font-weight:650; background:var(--card2); color:var(--text); }
   .btn.pri { background:#4f8cff; color:#fff; }
   .btn.dan { background:transparent; color:#ff5d73; }
+  .tabs { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; background:var(--card); border-radius:14px; margin:0 0 18px; }
+  .tabs button { border:0; border-radius:10px; padding:10px; font:inherit; font-weight:650; font-size:15px; background:transparent; color:var(--muted); }
+  .tabs button.on { background:var(--card2); color:var(--text); }
+  .ci { background:var(--card); border-radius:18px; overflow:hidden; }
+  .ci .cr { display:flex; align-items:center; gap:12px; padding:14px 16px; border-top:1px solid var(--line); }
+  .ci .cr:first-child { border-top:0; }
+  .ci .cic { width:38px; height:38px; border-radius:50%; background:var(--card2); display:flex; align-items:center; justify-content:center; }
+  .ci .cn { flex:1; } .ci .cn b { display:block; font-weight:650; font-size:16px; } .ci .cn span { color:var(--muted); font-size:13px; }
+  .sw { width:52px; height:32px; border-radius:16px; background:var(--card2); border:0; position:relative; padding:0; transition:background .2s; flex:none; }
+  .sw::after { content:""; position:absolute; top:3px; left:3px; width:26px; height:26px; border-radius:50%; background:#8b93a3; transition:left .2s, background .2s; }
+  .sw.on { background:#3fb7a6; } .sw.on::after { left:23px; background:#0b0d10; }
+  .lab { font-size:15px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin:24px 2px 10px; }
+  .rev { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
+  .rev button { height:64px; border:0; border-radius:14px; background:var(--c); opacity:.4; transition:opacity .15s, transform .08s; padding:0; }
+  .rev button.on { opacity:1; } .rev button:active { transform:scale(.95); }
+  .revname { text-align:center; font-size:20px; font-weight:700; margin-top:12px; min-height:26px; }
+  .revname.none { color:var(--muted); font-size:15px; font-weight:500; line-height:26px; }
+  .wd { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:8px; }
+  .wd button { height:48px; border:0; border-radius:14px; background:var(--card2); color:var(--text); font:inherit; font-size:18px; font-weight:650; padding:0; }
+  .wd button.on { background:#3fb7a6; color:#0b0d10; font-weight:700; }
+  .cimsg { text-align:center; color:var(--muted); font-size:13px; margin-top:22px; min-height:18px; }
   .foot { text-align:center; margin-top:28px; }
   .foot button { border:0; background:none; color:var(--muted); font:inherit; font-size:13px; text-decoration:underline; }
   .setup { min-height:70vh; display:flex; flex-direction:column; justify-content:center; gap:14px; }
@@ -186,13 +207,19 @@ function render() {
   if (!API || !WHO) return setupScreen();
   if (!$('grid')) {
     $('app').innerHTML = '<header><h1 id="hi"></h1><span class="date" id="date"></span></header>' +
-      '<div class="warn" id="warn">The last save to Notion failed — retrying in a few minutes.</div>' +
-      '<div id="grid"></div><h2>Today &amp; yesterday</h2><div class="list" id="list"></div>' +
+      '<div class="tabs" id="tabs"><button data-v="t">Timers</button><button data-v="c">Check-in</button></div>' +
+      '<div id="vt"><div class="warn" id="warn">The last save to Notion failed — retrying in a few minutes.</div>' +
+      '<div id="grid"></div><h2>Today &amp; yesterday</h2><div class="list" id="list"></div></div>' +
+      '<div id="vc"></div>' +
       '<div class="foot"><button id="switch">Not ' + NAMES[WHO] + '? Switch</button></div>';
   }
   $('hi').textContent = 'Hi, ' + NAMES[WHO];
   $('date').textContent = new Date(now()).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
   $('warn').style.display = S.sync ? 'block' : 'none';
+  $('vt').style.display = VIEW === 'c' ? 'none' : '';
+  $('vc').style.display = VIEW === 'c' ? '' : 'none';
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === VIEW));
+  if (VIEW === 'c') renderCi();
   const today = ymd(now());
   $('grid').innerHTML = (GROUPS[WHO] || []).map(g => {
     const tiles = g.keys.map(k => {
@@ -299,15 +326,72 @@ async function del(id, d) {
   if (!confirm('Delete this entry? Notion will be updated.')) return;
   try { apply(await call('del', d, id)); } catch (e) { fail(e); }
 }
+// ---- Evening check-in: every tap saves straight to today's Notion row (Diet, Suplementy, Nicotine, Review, Wordle).
+const REVIEW = [['Katastrofa', '#ff5d73'], ['Nic moc', '#ff8a3d'], ['Mid', '#ffd05c'], ['Spokojenej', '#4f8cff'], ['Peak', '#a66bff']];
+const WORDLE = ['1', '2', '3', '4', '5', '6', 'Failed'];
+const SW = [
+  ['diet', 'Diet', 'Stuck to the plan', '#5cc96b', '<path d="M5 19c0-8 5-13 14-14 0 9-5 14-14 14zM5 19l7-7"/>'],
+  ['supp', 'Supplements', 'Took them today', '#a66bff', '<path d="M10.5 20.5a4.95 4.95 0 01-7-7l10-10a4.95 4.95 0 017 7l-10 10zM8.5 8.5l7 7"/>'],
+  ['quit', 'Quit', 'Stayed clean today', '#ff5d73', '<path d="M3 15h13v4H3zM19 15v4M22 15v4M17 11c0-2 2-2 2-4s-2-2-2-4"/>'],
+];
+let VIEW = lsGet('view') === 'c' ? 'c' : 't';
+let CI = null, ciPending = 0, ciMsg = '';
+const ciBlank = () => ({ date: ymd(now()), diet: false, supp: false, quit: false, review: null, wordle: null });
+function ciCache() {
+  if (CI) return CI;
+  try { const c = JSON.parse(lsGet('ci:' + WHO) || 'null'); if (c && c.date === ymd(now())) return (CI = c); } catch (e) {}
+  return null;
+}
+function renderCi() {
+  const el = $('vc'); if (!el) return;
+  const c = ciCache() || ciBlank();
+  const rows = SW.map(r => '<div class="cr"><div class="cic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="' + r[3] +
+    '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + r[4] + '</svg></div>' +
+    '<div class="cn"><b>' + r[1] + '</b><span>' + r[2] + '</span></div>' +
+    '<button class="sw' + (c[r[0]] ? ' on' : '') + '" data-ci="' + r[0] + '" aria-pressed="' + !!c[r[0]] + '" aria-label="' + r[1] + '"></button></div>').join('');
+  const rev = REVIEW.map(r => '<button class="' + (c.review === r[0] ? 'on' : '') + '" style="--c:' + r[1] + '" data-ci="review" data-val="' + r[0] +
+    '" aria-pressed="' + (c.review === r[0]) + '" aria-label="' + r[0] + '"></button>').join('');
+  const wd = WORDLE.map(w => '<button class="' + (c.wordle === w ? 'on' : '') + '" data-ci="wordle" data-val="' + w + '" aria-pressed="' + (c.wordle === w) +
+    '"' + (w === 'Failed' ? ' aria-label="Failed"' : '') + '>' + (w === 'Failed' ? 'X' : w) + '</button>').join('');
+  el.innerHTML = '<div class="ci">' + rows + '</div>' +
+    '<div class="lab">How was your day?</div><div class="rev">' + rev + '</div>' +
+    '<div class="revname' + (c.review ? '' : ' none') + '">' + (c.review || 'Tap how it went') + '</div>' +
+    '<div class="lab">Wordle</div><div class="wd">' + wd + '</div>' +
+    '<div class="cimsg">' + ciMsg + '</div>';
+}
+async function ciTap(field, val) {
+  const c = ciCache() || (CI = ciBlank());
+  if (c.date !== ymd(now())) { CI = ciBlank(); }
+  const cur = CI[field];
+  CI[field] = (field === 'review' || field === 'wordle') ? (cur === val ? null : val) : !cur;
+  const nv = CI[field];
+  ciMsg = 'Saving…'; lsSet('ci:' + WHO, JSON.stringify(CI)); renderCi();
+  ciPending++;
+  try { await call('ciSet', field, nv); ciPending--; if (!ciPending) { ciMsg = 'Saved to Notion'; if (VIEW === 'c') renderCi(); } }
+  catch (e) { ciPending--; ciMsg = ''; fail(e); refreshCi(true); }
+}
+async function refreshCi(force) {
+  if (!API || !WHO || (ciPending && !force)) return;
+  try {
+    const r = await call('ciGet');
+    if (ciPending && !force) return;
+    CI = r.ci; lsSet('ci:' + WHO, JSON.stringify(CI));
+    if (VIEW === 'c') renderCi();
+  } catch (e) {}
+}
+function setView(v) { VIEW = v; lsSet('view', v); render(); if (v === 'c') refreshCi(); window.scrollTo(0, 0); }
 async function refresh() {
   if (!API || !WHO) return;
   try { apply(await call('state')); } catch (e) { if (!loaded) toast('Can’t connect — check your internet.'); }
+  if (VIEW === 'c') refreshCi();
 }
 
 document.addEventListener('click', e => {
   const w = e.target.closest('[data-who]');
-  if (w) { WHO = w.dataset.who; lsSet('who', WHO); S = JSON.parse(lsGet('state:' + WHO) || 'null') || { now: Date.now(), running: {}, sessions: [], sync: null }; loaded = false; $('app').innerHTML = ''; render(); return refresh(); }
+  if (w) { WHO = w.dataset.who; lsSet('who', WHO); S = JSON.parse(lsGet('state:' + WHO) || 'null') || { now: Date.now(), running: {}, sessions: [], sync: null }; loaded = false; CI = null; ciMsg = ''; $('app').innerHTML = ''; render(); return refresh(); }
   if (e.target.id === 'switch') { if (confirm('Switch to the other person?')) { WHO = null; lsSet('who', ''); $('app').innerHTML = ''; render(); } return; }
+  const v = e.target.closest('[data-v]'); if (v) return setView(v.dataset.v);
+  const ci = e.target.closest('[data-ci]'); if (ci) return ciTap(ci.dataset.ci, ci.dataset.val);
   const t = e.target.closest('[data-k]'); if (t) return tap(t.dataset.k);
   const d = e.target.closest('[data-del]'); if (d) return del(d.dataset.del, d.dataset.d);
 });
