@@ -111,6 +111,7 @@ const ALL = {
   mace:     { label: 'Macebell', icon: '🏏', color: '#ff8a3d' },
   func:     { label: 'Functional', icon: '🤸', color: '#ff5d73' },
   volley:   { label: 'Volleyball', icon: '🏐', color: '#f2c94c' },
+  football: { label: 'Football', icon: '⚽', color: '#5cc96b' },
   travel:   { label: 'Travel', icon: '🚗', limit: 6 },
   house:    { label: 'Housework', icon: '🧹' },
   care:     { label: 'Personal care', icon: '🪥' },
@@ -134,7 +135,8 @@ const GROUPS = {
     { title: 'Optional', color: '#ff5d73', keys: ['friends', 'waste'] },
   ],
   michal: [
-    { keys: ['read', 'study', 'sleep', 'mace', 'func', 'volley'] },
+    { title: 'Basics', color: '#3fb7a6', keys: ['sleep', 'read', 'study'] },
+    { title: 'Sport', color: '#ff8a3d', keys: ['volley', 'football'] },
   ],
 };
 function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
