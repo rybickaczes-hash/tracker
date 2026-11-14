@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tracker">
+<meta name="theme-color" content="#0f1115">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Tracker</title>
+<style>
+  :root { --bg:#0f1115; --card:#1a1d24; --card2:#22262f; --text:#e9edf3; --muted:#8b93a3; --line:#2a2f39; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html { background:var(--bg); }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+         padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 32px); -webkit-user-select:none; user-select:none; }
+  header { display:flex; align-items:baseline; justify-content:space-between; margin:4px 2px 18px; }
+  h1 { font-size:26px; margin:0; font-weight:700; letter-spacing:-.3px; }
+  .date { color:var(--muted); font-size:14px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .tile { position:relative; border:0; border-radius:20px; background:var(--card); color:var(--text); padding:16px; min-height:112px; text-align:left;
+          display:flex; flex-direction:column; justify-content:space-between; font:inherit; cursor:pointer; transition:transform .08s, background .2s; overflow:hidden; }
+  .tile:active { transform:scale(.97); }
+  .tile .ic { font-size:30px; line-height:1; }
+  .tile .lb { font-weight:650; font-size:17px; }
+  .tile .st { color:var(--muted); font-size:13px; margin-top:2px; font-variant-numeric:tabular-nums; }
+  .tile.on { background:var(--c); color:#0b0d10; }
+  .tile.on .st { color:#0b0d10; font-weight:700; font-size:20px; }
+  .tile.on::after { content:""; position:absolute; top:14px; right:14px; width:10px; height:10px; border-radius:50%; background:#0b0d10; animation:pulse 1.2s infinite; }
+  .tile.wait { background:var(--card2); box-shadow:inset 0 0 0 2px var(--c); }
+  .tile.wait .st { color:var(--text); font-weight:700; font-size:18px; }
+  .tile.busy { opacity:.6; }
+  @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.25 } }
+  h2 { font-size:15px; color:var(--muted); font-weight:600; margin:26px 2px 10px; text-transform:uppercase; letter-spacing:.6px; }
+  .list { background:var(--card); border-radius:18px; overflow:hidden; }
+  .row { display:flex; align-items:center; gap:12px; padding:13px 14px; border-top:1px solid var(--line); }
+  .row:first-child { border-top:0; }
+  .row .ic { font-size:20px; width:26px; text-align:center; }
+  .row .tx { flex:1; min-width:0; }
+  .row .t1 { font-weight:600; }
+  .row .t2 { color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; }
+  .row .du { font-variant-numeric:tabular-nums; font-weight:600; }
+  .row button { border:0; background:var(--card2); color:var(--muted); width:32px; height:32px; border-radius:10px; font-size:16px; }
+  .empty { color:var(--muted); padding:16px; text-align:center; font-size:14px; }
+  .warn { background:#3a2a12; color:#ffcf8a; border-radius:14px; padding:12px 14px; font-size:14px; margin-bottom:14px; display:none; }
+  .foot { text-align:center; margin-top:28px; }
+  .foot button { border:0; background:none; color:var(--muted); font:inherit; font-size:13px; text-decoration:underline; }
+  #toast { position:fixed; left:16px; right:16px; bottom:calc(env(safe-area-inset-bottom) + 20px); background:#ff5d73; color:#fff; padding:14px 16px; border-radius:14px; font-weight:600;
+           transform:translateY(calc(100% + 60px)); visibility:hidden; transition:transform .25s, visibility .25s; z-index:20; }
+  #toast.show { transform:none; visibility:visible; }
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:flex-end; z-index:10; }
+  .modal.show { display:flex; }
+  .sheet { background:var(--card); width:100%; border-radius:22px 22px 0 0; padding:22px 18px calc(env(safe-area-inset-bottom) + 24px); }
+  .sheet h3 { margin:0 0 6px; font-size:20px; }
+  .sheet p { margin:0 0 16px; color:var(--muted); }
+  .sheet input, .sheet select { width:100%; font:inherit; font-size:22px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--text); margin-bottom:14px; }
+  .sheet select { font-size:24px; font-weight:600; padding:14px 12px; border-radius:14px; -webkit-appearance:none; appearance:none; text-align:center; text-align-last:center; }
+  .btns { display:grid; gap:10px; }
+  .btn { border:0; border-radius:14px; padding:15px; font:inherit; font-weight:650; background:var(--card2); color:var(--text); }
+  .btn.pri { background:#4f8cff; color:#fff; }
+  .btn.dan { background:transparent; color:#ff5d73; }
+  .setup { min-height:70vh; display:flex; flex-direction:column; justify-content:center; gap:14px; }
+  .setup .btn { font-size:20px; padding:18px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<div class="modal" id="modal"><div class="sheet">
+  <h3 id="mT"></h3><p>Kdy jsi skončil?</p>
+  <input type="time" id="mTime">
+  <div class="btns">
+    <button class="btn pri" id="mSave">Uložit s tímto časem</button>
+    <button class="btn" id="mNow">Skončil jsem teď</button>
+    <button class="btn dan" id="mDrop">Zahodit tenhle záznam</button>
+    <button class="btn" id="mBack">Zpět</button>
+  </div>
+</div></div>
+<div class="modal" id="pick"><div class="sheet">
+  <h3 id="pT"></h3><p id="pP"></p>
+  <select id="pSel"></select>
+  <div class="btns">
+    <button class="btn pri" id="pOk"></button>
+    <button class="btn dan" id="pDrop">Zahodit tenhle záznam</button>
+    <button class="btn" id="pBack">Zpět</button>
+  </div>
+</div></div>
+<script>
+// Settings come from the personal install link (?who=lukas&k=<script id>) and are remembered on the phone.
+const NAMES = { lukas: 'Lukáš', michal: 'Michal' };
+const ACTS = [
+  { key: 'read', label: 'Čtení', icon: '📖', color: '#4f8cff' },
+  { key: 'study', label: 'Učení', icon: '📚', color: '#a66bff' },
+  { key: 'sleep', label: 'Spánek', icon: '😴', color: '#3fb7a6', byEnd: true },
+  { key: 'mace', label: 'Macebell', icon: '🔨', color: '#ff8a3d' },
+  { key: 'func', label: 'Functional', icon: '🏋️', color: '#ff5d73' },
+  { key: 'volley', label: 'Volejbal', icon: '🏐', color: '#f2c94c' },
+];
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+const qs = new URLSearchParams(location.search);
+if (qs.get('k')) lsSet('k', qs.get('k'));
+if (qs.get('who') && NAMES[qs.get('who').toLowerCase()]) lsSet('who', qs.get('who').toLowerCase());
+const KEY = lsGet('k');
+let WHO = lsGet('who');
+const API = KEY ? 'https://script.google.com/macros/s/' + encodeURIComponent(KEY) + '/exec' : null;
+
+let S = JSON.parse(lsGet('state:' + WHO) || 'null') || { now: Date.now(), running: {}, sessions: [], sync: null };
+let offset = 0, busy = {}, loaded = false;
+const $ = id => document.getElementById(id);
+const act = k => ACTS.find(a => a.key === k) || { label: k, icon: '•', color: '#888' };
+const now = () => Date.now() + offset;
+const pad = n => String(n).padStart(2, '0');
+const hms = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 3600) + ':' + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60); };
+const hm = ms => { const m = Math.round(ms / 60000); return Math.floor(m / 60) + ':' + pad(m % 60); };
+const clock = ms => { const d = new Date(ms); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const mmss = ms => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + pad(s % 60); };
+const runText = r => r > now() ? 'za ' + mmss(r - now()) : hms(now() - r);
+const durLabel = m => m < 60 ? m + ' min' : Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '');
+
+async function call(fn, ...args) {
+  const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ api: 'tracker', fn: fn, who: WHO, args: args }) });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'error');
+  return j.state;
+}
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 3500); }
+function apply(st) { S = st; offset = st.now - Date.now(); loaded = true; lsSet('state:' + WHO, JSON.stringify(st)); render(); }
+function fail(e) { toast('Nepovedlo se — zkontroluj internet a zkus to znovu.'); console.error(e); }
+
+function setupScreen() {
+  if (!API) {
+    $('app').innerHTML = '<div class="setup"><h1>Tracker</h1><p style="color:var(--muted)">Otevři svůj osobní odkaz, který jsi dostal, a pak ho přidej na plochu.</p></div>';
+    return;
+  }
+  $('app').innerHTML = '<div class="setup"><h1>Kdo jsi?</h1>' +
+    Object.keys(NAMES).map(w => '<button class="btn" data-who="' + w + '">' + NAMES[w] + '</button>').join('') + '</div>';
+}
+
+function render() {
+  if (!API || !WHO) return setupScreen();
+  if (!$('grid')) {
+    $('app').innerHTML = '<header><h1 id="hi"></h1><span class="date" id="date"></span></header>' +
+      '<div class="warn" id="warn">Poslední zápis do Notionu se nepovedl — zkusím to znovu za pár minut.</div>' +
+      '<div class="grid" id="grid"></div><h2>Dnes a včera</h2><div class="list" id="list"></div>' +
+      '<div class="foot"><button id="switch">Nejsi ' + NAMES[WHO] + '? Přepnout</button></div>';
+  }
+  $('hi').textContent = 'Ahoj, ' + NAMES[WHO];
+  $('date').textContent = new Date(now()).toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric' });
+  $('warn').style.display = S.sync ? 'block' : 'none';
+  $('grid').innerHTML = ACTS.map(a => {
+    const on = S.running[a.key], wait = on && on > now();
+    return '<button class="tile' + (on ? (wait ? ' wait' : ' on') : '') + (busy[a.key] ? ' busy' : '') + '" style="--c:' + a.color + '" data-k="' + a.key + '">' +
+      '<span class="ic">' + a.icon + '</span><span><div class="lb">' + a.label + '</div>' +
+      '<div class="st" data-run="' + (on || '') + '">' + (on ? runText(on) : (loaded ? 'Start' : '…')) + '</div></span></button>';
+  }).join('');
+  const today = new Date(now()).toDateString();
+  $('list').innerHTML = S.sessions.length ? S.sessions.map(s => {
+    const a = act(s.a), day = new Date(s.s).toDateString() === today ? '' : 'včera · ';
+    return '<div class="row"><span class="ic">' + a.icon + '</span><div class="tx"><div class="t1">' + a.label + '</div>' +
+      '<div class="t2">' + day + clock(s.s) + '–' + clock(s.e) + '</div></div><span class="du">' + hm(s.e - s.s) + '</span>' +
+      '<button data-del="' + s.id + '" data-d="' + s.d + '" aria-label="Smazat">✕</button></div>';
+  }).join('') : '<div class="empty">' + (loaded ? 'Zatím nic. Klepni na aktivitu a začni.' : 'Načítám…') + '</div>';
+}
+function tick() { document.querySelectorAll('[data-run]').forEach(el => { const r = Number(el.dataset.run); if (!r) return; if (r <= now() && el.closest('.wait')) return render(); el.textContent = runText(r); }); }
+
+function askEnd(a, start) {
+  return new Promise(done => {
+    $('mT').textContent = a.icon + ' ' + a.label + ' běží ' + hm(now() - start);
+    $('mTime').value = clock(now());
+    $('modal').classList.add('show');
+    const close = v => { $('modal').classList.remove('show'); done(v); };
+    $('mSave').onclick = () => {
+      const [h, m] = ($('mTime').value || '').split(':').map(Number);
+      if (isNaN(h)) return close(null);
+      const d = new Date(now()); d.setHours(h, m, 0, 0);
+      let ms = d.getTime(); if (ms > now()) ms -= 86400000;
+      if (ms <= start) { toast('Ten čas je před začátkem.'); return; }
+      close(ms);
+    };
+    $('mNow').onclick = () => close(null);
+    $('mDrop').onclick = () => close('drop');
+    $('mBack').onclick = () => close(undefined);
+  });
+}
+function pick(o) {
+  return new Promise(done => {
+    $('pT').textContent = o.title; $('pP').textContent = o.text; $('pOk').textContent = o.ok;
+    $('pSel').innerHTML = o.items.map(it => '<option value="' + it[0] + '">' + it[1] + '</option>').join('');
+    $('pSel').value = String(o.value);
+    $('pDrop').style.display = o.drop ? 'block' : 'none';
+    $('pick').classList.add('show');
+    const close = v => { $('pick').classList.remove('show'); done(v); };
+    $('pOk').onclick = () => close(Number($('pSel').value));
+    $('pDrop').onclick = () => close('drop');
+    $('pBack').onclick = () => close(undefined);
+  });
+}
+
+// Sleep: pick a delay when starting (timer starts by itself), pick "woke up X min ago" when stopping.
+async function sleepTap(key, start) {
+  if (!start) {
+    const v = await pick({ title: '😴 Spánek', text: 'Za jak dlouho usneš? Časovač se spustí sám.', ok: 'Spustit',
+      items: [0, 5, 10, 15, 20, 25, 30, 40, 45, 60, 75, 90].map(m => [m, m ? 'za ' + durLabel(m) : 'Hned']), value: lsGet('sleepDelay') || 0 });
+    if (v === undefined) return;
+    lsSet('sleepDelay', v);
+    S.running[key] = now() + v * 60000; render();
+    return apply(await call('start', key, v));
+  }
+  if (start > now()) {
+    if (!confirm('Zrušit odpočet spánku?')) return;
+    return apply(await call('cancel', key));
+  }
+  const v = await pick({ title: '☀️ Dobré ráno', text: 'Kdy ses probudil?', ok: 'Uložit spánek', drop: true,
+    items: [0, 5, 10, 15, 20, 25, 30, 40, 45, 50, 60, 75, 90, 105, 120, 150, 180, 240].map(m => [m, m ? 'před ' + durLabel(m) : 'Právě teď']), value: 0 });
+  if (v === undefined) return;
+  if (v === 'drop') return apply(await call('cancel', key));
+  const end = now() - v * 60000;
+  if (end - start < 60000) { toast('Probuzení musí být až po usnutí.'); return; }
+  delete S.running[key]; render();
+  apply(await call('stop', key, v ? end : null));
+}
+
+async function tap(key) {
+  if (busy[key] || !loaded) return;
+  const a = act(key), start = S.running[key];
+  busy[key] = true;
+  try {
+    if (a.byEnd) return await sleepTap(key, start);
+    if (!start) {
+      S.running[key] = now(); render();
+      apply(await call('start', key));
+    } else {
+      let end = null;
+      if (now() - start > 3 * 3600000) {
+        end = await askEnd(a, start);
+        if (end === undefined) return;
+        if (end === 'drop') { apply(await call('cancel', key)); return; }
+      }
+      delete S.running[key]; render();
+      apply(await call('stop', key, end));
+    }
+  } catch (e) { fail(e); refresh(); }
+  finally { busy[key] = false; render(); }
+}
+async function del(id, d) {
+  if (!confirm('Smazat tenhle záznam? Notion se upraví.')) return;
+  try { apply(await call('del', d, id)); } catch (e) { fail(e); }
+}
+async function refresh() {
+  if (!API || !WHO) return;
+  try { apply(await call('state')); } catch (e) { if (!loaded) toast('Nemůžu se připojit — zkontroluj internet.'); }
+}
+
+document.addEventListener('click', e => {
+  const w = e.target.closest('[data-who]');
+  if (w) { WHO = w.dataset.who; lsSet('who', WHO); S = JSON.parse(lsGet('state:' + WHO) || 'null') || { now: Date.now(), running: {}, sessions: [], sync: null }; loaded = false; $('app').innerHTML = ''; render(); return refresh(); }
+  if (e.target.id === 'switch') { if (confirm('Přepnout na druhého člověka?')) { WHO = null; lsSet('who', ''); render(); } return; }
+  const t = e.target.closest('[data-k]'); if (t) return tap(t.dataset.k);
+  const d = e.target.closest('[data-del]'); if (d) return del(d.dataset.del, d.dataset.d);
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+setInterval(tick, 1000); setInterval(refresh, 60000);
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+render(); refresh();
+</script>
+</body>
+</html>
