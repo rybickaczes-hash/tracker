@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="cs">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -47,8 +47,6 @@
   .row button { border:0; background:var(--card2); color:var(--muted); width:32px; height:32px; border-radius:10px; font-size:16px; }
   .empty { color:var(--muted); padding:16px; text-align:center; font-size:14px; }
   .warn { background:#3a2a12; color:#ffcf8a; border-radius:14px; padding:12px 14px; font-size:14px; margin-bottom:14px; display:none; }
-  .foot { text-align:center; margin-top:28px; }
-  .foot button { border:0; background:none; color:var(--muted); font:inherit; font-size:13px; text-decoration:underline; }
   #toast { position:fixed; left:16px; right:16px; bottom:calc(env(safe-area-inset-bottom) + 20px); background:#ff5d73; color:#fff; padding:14px 16px; border-radius:14px; font-weight:600;
            transform:translateY(calc(100% + 60px)); visibility:hidden; transition:transform .25s, visibility .25s; z-index:20; }
   #toast.show { transform:none; visibility:visible; }
@@ -71,13 +69,13 @@
 <div id="app"></div>
 <div id="toast"></div>
 <div class="modal" id="modal"><div class="sheet">
-  <h3 id="mT"></h3><p>Kdy jsi skončil?</p>
+  <h3 id="mT"></h3><p>When did you finish?</p>
   <input type="time" id="mTime">
   <div class="btns">
-    <button class="btn pri" id="mSave">Uložit s tímto časem</button>
-    <button class="btn" id="mNow">Skončil jsem teď</button>
-    <button class="btn dan" id="mDrop">Zahodit tenhle záznam</button>
-    <button class="btn" id="mBack">Zpět</button>
+    <button class="btn pri" id="mSave">Save with this time</button>
+    <button class="btn" id="mNow">I just finished</button>
+    <button class="btn dan" id="mDrop">Discard this entry</button>
+    <button class="btn" id="mBack">Back</button>
   </div>
 </div></div>
 <div class="modal" id="pick"><div class="sheet">
@@ -85,20 +83,20 @@
   <select id="pSel"></select>
   <div class="btns">
     <button class="btn pri" id="pOk"></button>
-    <button class="btn dan" id="pDrop">Zahodit tenhle záznam</button>
-    <button class="btn" id="pBack">Zpět</button>
+    <button class="btn dan" id="pDrop">Discard this entry</button>
+    <button class="btn" id="pBack">Back</button>
   </div>
 </div></div>
 <script>
 // Settings come from the personal install link (?who=lukas&k=<script id>) and are remembered on the phone.
 const NAMES = { lukas: 'Lukáš', michal: 'Michal' };
 const ACTS = [
-  { key: 'read', label: 'Čtení', icon: '📖', color: '#4f8cff' },
-  { key: 'study', label: 'Učení', icon: '📚', color: '#a66bff' },
-  { key: 'sleep', label: 'Spánek', icon: '😴', color: '#3fb7a6', byEnd: true },
+  { key: 'read', label: 'Reading', icon: '📖', color: '#4f8cff' },
+  { key: 'study', label: 'Study', icon: '📚', color: '#a66bff' },
+  { key: 'sleep', label: 'Sleep', icon: '😴', color: '#3fb7a6', byEnd: true },
   { key: 'mace', label: 'Macebell', icon: '🔨', color: '#ff8a3d' },
   { key: 'func', label: 'Functional', icon: '🏋️', color: '#ff5d73' },
-  { key: 'volley', label: 'Volejbal', icon: '🏐', color: '#f2c94c' },
+  { key: 'volley', label: 'Volleyball', icon: '🏐', color: '#f2c94c' },
 ];
 function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -119,7 +117,7 @@ const hms = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return Math.fl
 const hm = ms => { const m = Math.round(ms / 60000); return Math.floor(m / 60) + ':' + pad(m % 60); };
 const clock = ms => { const d = new Date(ms); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
 const mmss = ms => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + pad(s % 60); };
-const runText = r => r > now() ? 'za ' + mmss(r - now()) : hms(now() - r);
+const runText = r => r > now() ? 'in ' + mmss(r - now()) : hms(now() - r);
 const durLabel = m => m < 60 ? m + ' min' : Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '');
 
 async function call(fn, ...args) {
@@ -131,14 +129,14 @@ async function call(fn, ...args) {
 }
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 3500); }
 function apply(st) { S = st; offset = st.now - Date.now(); loaded = true; lsSet('state:' + WHO, JSON.stringify(st)); render(); }
-function fail(e) { toast('Nepovedlo se — zkontroluj internet a zkus to znovu.'); console.error(e); }
+function fail(e) { toast('That didn’t work — check your internet and try again.'); console.error(e); }
 
 function setupScreen() {
   if (!API) {
-    $('app').innerHTML = '<div class="setup"><h1>Tracker</h1><p style="color:var(--muted)">Otevři svůj osobní odkaz, který jsi dostal, a pak ho přidej na plochu.</p></div>';
+    $('app').innerHTML = '<div class="setup"><h1>Tracker</h1><p style="color:var(--muted)">Open your personal link, then add it to your Home Screen.</p></div>';
     return;
   }
-  $('app').innerHTML = '<div class="setup"><h1>Kdo jsi?</h1>' +
+  $('app').innerHTML = '<div class="setup"><h1>Who are you?</h1>' +
     Object.keys(NAMES).map(w => '<button class="btn" data-who="' + w + '">' + NAMES[w] + '</button>').join('') + '</div>';
 }
 
@@ -146,12 +144,11 @@ function render() {
   if (!API || !WHO) return setupScreen();
   if (!$('grid')) {
     $('app').innerHTML = '<header><h1 id="hi"></h1><span class="date" id="date"></span></header>' +
-      '<div class="warn" id="warn">Poslední zápis do Notionu se nepovedl — zkusím to znovu za pár minut.</div>' +
-      '<div class="grid" id="grid"></div><h2>Dnes a včera</h2><div class="list" id="list"></div>' +
-      '<div class="foot"><button id="switch">Nejsi ' + NAMES[WHO] + '? Přepnout</button></div>';
+      '<div class="warn" id="warn">The last save to Notion failed — retrying in a few minutes.</div>' +
+      '<div class="grid" id="grid"></div><h2>Today &amp; yesterday</h2><div class="list" id="list"></div>';
   }
-  $('hi').textContent = 'Ahoj, ' + NAMES[WHO];
-  $('date').textContent = new Date(now()).toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric' });
+  $('hi').textContent = 'Hi, ' + NAMES[WHO];
+  $('date').textContent = new Date(now()).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
   $('warn').style.display = S.sync ? 'block' : 'none';
   $('grid').innerHTML = ACTS.map(a => {
     const on = S.running[a.key], wait = on && on > now();
@@ -161,17 +158,17 @@ function render() {
   }).join('');
   const today = new Date(now()).toDateString();
   $('list').innerHTML = S.sessions.length ? S.sessions.map(s => {
-    const a = act(s.a), day = new Date(s.s).toDateString() === today ? '' : 'včera · ';
+    const a = act(s.a), day = new Date(s.s).toDateString() === today ? '' : 'yesterday · ';
     return '<div class="row"><span class="ic">' + a.icon + '</span><div class="tx"><div class="t1">' + a.label + '</div>' +
       '<div class="t2">' + day + clock(s.s) + '–' + clock(s.e) + '</div></div><span class="du">' + hm(s.e - s.s) + '</span>' +
-      '<button data-del="' + s.id + '" data-d="' + s.d + '" aria-label="Smazat">✕</button></div>';
-  }).join('') : '<div class="empty">' + (loaded ? 'Zatím nic. Klepni na aktivitu a začni.' : 'Načítám…') + '</div>';
+      '<button data-del="' + s.id + '" data-d="' + s.d + '" aria-label="Delete">✕</button></div>';
+  }).join('') : '<div class="empty">' + (loaded ? 'Nothing yet. Tap an activity to start.' : 'Loading…') + '</div>';
 }
 function tick() { document.querySelectorAll('[data-run]').forEach(el => { const r = Number(el.dataset.run); if (!r) return; if (r <= now() && el.closest('.wait')) return render(); el.textContent = runText(r); }); }
 
 function askEnd(a, start) {
   return new Promise(done => {
-    $('mT').textContent = a.icon + ' ' + a.label + ' běží ' + hm(now() - start);
+    $('mT').textContent = a.icon + ' ' + a.label + ' running for ' + hm(now() - start);
     $('mTime').value = clock(now());
     $('modal').classList.add('show');
     const close = v => { $('modal').classList.remove('show'); done(v); };
@@ -180,7 +177,7 @@ function askEnd(a, start) {
       if (isNaN(h)) return close(null);
       const d = new Date(now()); d.setHours(h, m, 0, 0);
       let ms = d.getTime(); if (ms > now()) ms -= 86400000;
-      if (ms <= start) { toast('Ten čas je před začátkem.'); return; }
+      if (ms <= start) { toast('That time is before the start.'); return; }
       close(ms);
     };
     $('mNow').onclick = () => close(null);
@@ -205,23 +202,23 @@ function pick(o) {
 // Sleep: pick a delay when starting (timer starts by itself), pick "woke up X min ago" when stopping.
 async function sleepTap(key, start) {
   if (!start) {
-    const v = await pick({ title: '😴 Spánek', text: 'Za jak dlouho usneš? Časovač se spustí sám.', ok: 'Spustit',
-      items: [0, 5, 10, 15, 20, 25, 30, 40, 45, 60, 75, 90].map(m => [m, m ? 'za ' + durLabel(m) : 'Hned']), value: lsGet('sleepDelay') || 0 });
+    const v = await pick({ title: '😴 Sleep', text: 'When will you fall asleep? The timer starts by itself.', ok: 'Start',
+      items: [0, 5, 10, 15, 20, 25, 30, 40, 45, 60, 75, 90].map(m => [m, m ? 'in ' + durLabel(m) : 'Now']), value: lsGet('sleepDelay') || 0 });
     if (v === undefined) return;
     lsSet('sleepDelay', v);
     S.running[key] = now() + v * 60000; render();
     return apply(await call('start', key, v));
   }
   if (start > now()) {
-    if (!confirm('Zrušit odpočet spánku?')) return;
+    if (!confirm('Cancel the sleep countdown?')) return;
     return apply(await call('cancel', key));
   }
-  const v = await pick({ title: '☀️ Dobré ráno', text: 'Kdy ses probudil?', ok: 'Uložit spánek', drop: true,
-    items: [0, 5, 10, 15, 20, 25, 30, 40, 45, 50, 60, 75, 90, 105, 120, 150, 180, 240].map(m => [m, m ? 'před ' + durLabel(m) : 'Právě teď']), value: 0 });
+  const v = await pick({ title: '☀️ Good morning', text: 'When did you wake up?', ok: 'Save sleep', drop: true,
+    items: [0, 5, 10, 15, 20, 25, 30, 40, 45, 50, 60, 75, 90, 105, 120, 150, 180, 240].map(m => [m, m ? durLabel(m) + ' ago' : 'Just now']), value: 0 });
   if (v === undefined) return;
   if (v === 'drop') return apply(await call('cancel', key));
   const end = now() - v * 60000;
-  if (end - start < 60000) { toast('Probuzení musí být až po usnutí.'); return; }
+  if (end - start < 60000) { toast('Wake-up has to be after falling asleep.'); return; }
   delete S.running[key]; render();
   apply(await call('stop', key, v ? end : null));
 }
@@ -249,18 +246,17 @@ async function tap(key) {
   finally { busy[key] = false; render(); }
 }
 async function del(id, d) {
-  if (!confirm('Smazat tenhle záznam? Notion se upraví.')) return;
+  if (!confirm('Delete this entry? Notion will be updated.')) return;
   try { apply(await call('del', d, id)); } catch (e) { fail(e); }
 }
 async function refresh() {
   if (!API || !WHO) return;
-  try { apply(await call('state')); } catch (e) { if (!loaded) toast('Nemůžu se připojit — zkontroluj internet.'); }
+  try { apply(await call('state')); } catch (e) { if (!loaded) toast('Can’t connect — check your internet.'); }
 }
 
 document.addEventListener('click', e => {
   const w = e.target.closest('[data-who]');
   if (w) { WHO = w.dataset.who; lsSet('who', WHO); S = JSON.parse(lsGet('state:' + WHO) || 'null') || { now: Date.now(), running: {}, sessions: [], sync: null }; loaded = false; $('app').innerHTML = ''; render(); return refresh(); }
-  if (e.target.id === 'switch') { if (confirm('Přepnout na druhého člověka?')) { WHO = null; lsSet('who', ''); render(); } return; }
   const t = e.target.closest('[data-k]'); if (t) return tap(t.dataset.k);
   const d = e.target.closest('[data-del]'); if (d) return del(d.dataset.del, d.dataset.d);
 });
