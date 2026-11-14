@@ -78,7 +78,8 @@
   .ci { background:var(--card); border-radius:18px; overflow:hidden; }
   .ci .cr { display:flex; align-items:center; gap:14px; padding:20px 18px; border-top:1px solid var(--line); }
   .ci .cr:first-child { border-top:0; }
-  .ci .cic { width:44px; height:44px; border-radius:50%; background:var(--card2); display:flex; align-items:center; justify-content:center; }
+  .ci .cic { width:44px; height:44px; border-radius:50%; background:var(--card2); display:flex; align-items:center; justify-content:center; overflow:hidden; flex:none; }
+  .ci .cic img { width:100%; height:100%; object-fit:cover; display:block; }
   .ci .cn { flex:1; } .ci .cn b { display:block; font-weight:650; font-size:16px; } .ci .cn span { color:var(--muted); font-size:13px; }
   .sw { width:52px; height:32px; border-radius:16px; background:var(--card2); border:0; position:relative; padding:0; transition:background .2s; flex:none; }
   .sw::after { content:""; position:absolute; top:3px; left:3px; width:26px; height:26px; border-radius:50%; background:#8b93a3; transition:left .2s, background .2s; }
@@ -332,8 +333,8 @@ const WORDLE = ['1', '2', '3', '4', '5', '6', 'Failed'];
 const SW = [
   ['diet', 'Diet', 'Stuck to the plan', '#5cc96b', '<path d="M5 19c0-8 5-13 14-14 0 9-5 14-14 14zM5 19l7-7"/>'],
   ['supp', 'Supplements', 'Took them today', '#a66bff', '<path d="M10.5 20.5a4.95 4.95 0 01-7-7l10-10a4.95 4.95 0 017 7l-10 10zM8.5 8.5l7 7"/>'],
-  ['quit', 'Quit', 'Stayed clean today', '#ff5d73', '🚭'],
-  ['zmrd', 'Najman je zmrd', 'Byl otravnej', '#ffd05c', '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>'],
+  ['quit', 'Quit', 'Stayed clean today', '#ff5d73', 'img:quit.jpg'],
+  ['zmrd', 'Najman je zmrd', 'Byl otravnej', '#ffd05c', 'img:najman.jpg'],
 ];
 let VIEW = lsGet('view') === 'c' ? 'c' : 't';
 let CI = null, ciPending = 0, ciMsg = '';
@@ -346,7 +347,7 @@ function ciCache() {
 function renderCi() {
   const el = $('vc'); if (!el) return;
   const c = ciCache() || ciBlank();
-  const rows = SW.map(r => '<div class="cr"><div class="cic">' + (r[4][0] === '<' ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="' + r[3] +
+  const rows = SW.map(r => '<div class="cr"><div class="cic">' + (r[4].slice(0, 4) === 'img:' ? '<img src="' + r[4].slice(4) + '" alt="">' : r[4][0] === '<' ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="' + r[3] +
     '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + r[4] + '</svg>' : '<span style="font-size:20px;line-height:1">' + r[4] + '</span>') + '</div>' +
     '<div class="cn"><b>' + r[1] + '</b><span>' + r[2] + '</span></div>' +
     '<button class="sw' + (c[r[0]] ? ' on' : '') + '" data-ci="' + r[0] + '" aria-pressed="' + !!c[r[0]] + '" aria-label="' + r[1] + '"></button></div>').join('');
