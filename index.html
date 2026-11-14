@@ -332,7 +332,8 @@ const WORDLE = ['1', '2', '3', '4', '5', '6', 'Failed'];
 const SW = [
   ['diet', 'Diet', 'Stuck to the plan', '#5cc96b', '<path d="M5 19c0-8 5-13 14-14 0 9-5 14-14 14zM5 19l7-7"/>'],
   ['supp', 'Supplements', 'Took them today', '#a66bff', '<path d="M10.5 20.5a4.95 4.95 0 01-7-7l10-10a4.95 4.95 0 017 7l-10 10zM8.5 8.5l7 7"/>'],
-  ['quit', 'Quit', 'Stayed clean today', '#ff5d73', '<path d="M3 15h13v4H3zM19 15v4M22 15v4M17 11c0-2 2-2 2-4s-2-2-2-4"/>'],
+  ['quit', 'Quit', 'Stayed clean today', '#ff5d73', '🚭'],
+  ['zmrd', 'Zmrd Najman', 'Tick if yes', '#ffd05c', '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>'],
 ];
 let VIEW = lsGet('view') === 'c' ? 'c' : 't';
 let CI = null, ciPending = 0, ciMsg = '';
@@ -345,9 +346,9 @@ function ciCache() {
 function renderCi() {
   const el = $('vc'); if (!el) return;
   const c = ciCache() || ciBlank();
-  const rows = SW.map(r => '<div class="cr"><div class="cic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="' + r[3] +
-    '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + r[4] + '</svg></div>' +
-    '<div class="cn"><b>' + r[1] + '</b><span>' + r[2] + '</span></div>' +
+  const rows = SW.map(r => '<div class="cr"><div class="cic">' + (r[4][0] === '<' ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="' + r[3] +
+    '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + r[4] + '</svg>' : '<span style="font-size:20px;line-height:1">' + r[4] + '</span>') + '</div>' +
+    '<div class="cn"><b>' + r[1] + '</b><span>' + (r[0] === 'quit' && c.streak ? '🔥 ' + c.streak + (c.streak === 1 ? ' day' : ' days') + ' clean' : r[2]) + '</span></div>' +
     '<button class="sw' + (c[r[0]] ? ' on' : '') + '" data-ci="' + r[0] + '" aria-pressed="' + !!c[r[0]] + '" aria-label="' + r[1] + '"></button></div>').join('');
   const rev = REVIEW.map(r => '<button class="' + (c.review === r[0] ? 'on' : '') + '" style="--c:' + r[1] + '" data-ci="review" data-val="' + r[0] +
     '" aria-pressed="' + (c.review === r[0]) + '" aria-label="' + r[0] + '"></button>').join('');
@@ -365,9 +366,10 @@ async function ciTap(field, val) {
   const cur = CI[field];
   CI[field] = (field === 'review' || field === 'wordle') ? (cur === val ? null : val) : !cur;
   const nv = CI[field];
+  if (field === 'quit' && CI.streak != null) CI.streak = Math.max(0, CI.streak + (nv ? 1 : -1));
   ciMsg = 'Saving…'; lsSet('ci:' + WHO, JSON.stringify(CI)); renderCi();
   ciPending++;
-  try { await call('ciSet', field, nv); ciPending--; if (!ciPending) { ciMsg = 'Saved to Notion'; if (VIEW === 'c') renderCi(); } }
+  try { const r = await call('ciSet', field, nv); if (r && r.ci && r.ci.streak != null) CI.streak = r.ci.streak; lsSet('ci:' + WHO, JSON.stringify(CI)); ciPending--; if (!ciPending) { ciMsg = 'Saved to Notion'; if (VIEW === 'c') renderCi(); } }
   catch (e) { ciPending--; ciMsg = ''; fail(e); refreshCi(true); }
 }
 async function refreshCi(force) {
