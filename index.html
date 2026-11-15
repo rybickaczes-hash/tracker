@@ -476,13 +476,28 @@ document.addEventListener('click', e => {
   const rs = e.target.closest('[data-res]'); if (rs) return resume(rs.dataset.res, rs.dataset.d);
   const d = e.target.closest('[data-del]'); if (d) return del(d.dataset.del, d.dataset.d);
 });
-// Long-press a tile (about half a second): open the Log screen with that activity selected.
+// Long-press a RUNNING tile: pick when it really ended (forgot to stop). Any other tile: open the Log screen.
+async function longPress(key) {
+  const a = act(key), start = S.running[key];
+  if (!start || start > now() || busy[key] || !loaded) return Log.open(key);
+  if (a.byEnd) return tap(key); // sleep already asks "when did you wake up?"
+  busy[key] = true;
+  try {
+    const end = await askEnd(a, start);
+    if (end === undefined) return;
+    if (end === 'drop') { apply(await call('cancel', key)); return; }
+    delete S.running[key]; render();
+    apply(await call('stop', key, end));
+  } catch (e) { fail(e); refresh(); }
+  finally { busy[key] = false; render(); }
+}
+// Long-press a tile (about half a second).
 let lpTimer = null, lpFired = false, lpX = 0, lpY = 0;
 const lpClear = () => { clearTimeout(lpTimer); lpTimer = null; };
 document.addEventListener('pointerdown', e => {
   const t = e.target.closest('[data-k]'); if (!t || e.button > 0) return;
   lpFired = false; lpX = e.clientX; lpY = e.clientY; lpClear();
-  lpTimer = setTimeout(() => { lpFired = true; lpTimer = null; if (navigator.vibrate) navigator.vibrate(15); Log.open(t.dataset.k); setTimeout(() => { lpFired = false; }, 700); }, 550);
+  lpTimer = setTimeout(() => { lpFired = true; lpTimer = null; if (navigator.vibrate) navigator.vibrate(15); longPress(t.dataset.k); setTimeout(() => { lpFired = false; }, 700); }, 550);
 });
 document.addEventListener('pointermove', e => { if (lpTimer && Math.hypot(e.clientX - lpX, e.clientY - lpY) > 10) lpClear(); });
 ['pointerup', 'pointercancel'].forEach(n => document.addEventListener(n, lpClear));
