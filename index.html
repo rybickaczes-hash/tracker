@@ -58,6 +58,13 @@
   .row .du { font-variant-numeric:tabular-nums; font-weight:600; }
   .row button { margin-left:6px; border:0; background:var(--card2); color:var(--muted); width:32px; height:32px; border-radius:10px; font-size:16px; }
   .empty { color:var(--muted); padding:16px; text-align:center; font-size:14px; }
+  .buddy { display:flex; align-items:center; gap:12px; background:var(--card); border-radius:16px; padding:11px 14px; margin:0 0 14px; }
+  .buddy .av { width:32px; height:32px; border-radius:50%; background:var(--card2); display:grid; place-items:center; font-weight:700; flex:none; position:relative; }
+  .buddy .av.live::after { content:''; position:absolute; right:-1px; bottom:-1px; width:10px; height:10px; border-radius:50%; background:#34c76b; border:2px solid var(--card); }
+  .buddy .tx { flex:1; min-width:0; font-size:14px; line-height:1.35; }
+  .buddy .tx b { font-weight:650; }
+  .buddy .sub { color:var(--muted); font-size:13px; }
+  .buddy .tm { font-variant-numeric:tabular-nums; font-weight:650; }
   .warn { background:#3a2a12; color:#ffcf8a; border-radius:14px; padding:12px 14px; font-size:14px; margin-bottom:14px; display:none; }
   #toast { position:fixed; left:16px; right:16px; bottom:calc(env(safe-area-inset-bottom) + 20px); background:#ff5d73; color:#fff; padding:14px 16px; border-radius:14px; font-weight:600;
            transform:translateY(calc(100% + 60px)); visibility:hidden; transition:transform .25s, visibility .25s; z-index:20; }
@@ -212,12 +219,29 @@ function setupScreen() {
     Object.keys(NAMES).map(w => '<button class="btn" data-who="' + w + '">' + NAMES[w] + '</button>').join('') + '</div>';
 }
 
+// What the other person is doing right now (or what they did last).
+function buddyHtml(o) {
+  if (!o || !NAMES[o.who]) return '';
+  const nm = NAMES[o.who], run = Object.keys(o.running || {}).filter(k => ALL[k]);
+  let line, live = false;
+  if (run.length) {
+    live = true;
+    line = run.map(k => { const a = act(k), r = o.running[k];
+      return '<div>' + a.icon + ' <b>' + a.label + '</b> <span class="tm" data-run="' + r + '">' + runText(r) + '</span></div>'; }).join('');
+  } else if (o.last && ALL[o.last.a]) {
+    const a = act(o.last.a), m = Math.max(0, Math.round((now() - o.last.e) / 60000));
+    line = '<div>Not tracking right now</div><div class="sub">Last: ' + a.icon + ' ' + a.label + ' · ' + hm(o.last.e - o.last.s) + ', ended ' + (m < 1 ? 'just now' : durLabel(m) + ' ago') + '</div>';
+  } else line = '<div>Nothing tracked yet</div>';
+  return '<div class="buddy"><span class="av' + (live ? ' live' : '') + '">' + nm[0] + '</span><div class="tx"><div class="sub">' + nm + (live ? ' is doing' : '') + '</div>' + line + '</div></div>';
+}
+
 function render() {
   if (!API || !WHO) return setupScreen();
   if (!$('grid')) {
     $('app').innerHTML = '<header><h1 id="hi"></h1><span class="date" id="date"></span></header>' +
       '<div class="trow"><div class="tabs" id="tabs"><button data-v="t">Timers</button><button data-v="c">Check-in</button></div><button class="logbtn" id="logbtn" aria-label="Log an activity afterwards">＋ Log</button></div>' +
       '<div id="vt"><div class="warn" id="warn">The last save to Notion failed — retrying in a few minutes.</div>' +
+      '<div id="buddy"></div>' +
       '<div id="grid"></div><h2>Today &amp; yesterday</h2><div class="list" id="list"></div></div>' +
       '<div id="vc"></div>' +
       '<div class="foot"><button id="switch">Not ' + NAMES[WHO] + '? Switch</button></div>';
@@ -229,6 +253,7 @@ function render() {
   $('vc').style.display = VIEW === 'c' ? '' : 'none';
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === VIEW));
   if (VIEW === 'c') renderCi();
+  $('buddy').innerHTML = buddyHtml(S.other);
   const today = ymd(now());
   $('grid').innerHTML = (GROUPS[WHO] || []).map(g => {
     const tiles = g.keys.map(k => {
