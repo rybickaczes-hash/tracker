@@ -55,7 +55,7 @@
   .row .t1 { font-weight:600; }
   .row .t2 { color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; }
   .row .du { font-variant-numeric:tabular-nums; font-weight:600; }
-  .row button { border:0; background:var(--card2); color:var(--muted); width:32px; height:32px; border-radius:10px; font-size:16px; }
+  .row button { margin-left:6px; border:0; background:var(--card2); color:var(--muted); width:32px; height:32px; border-radius:10px; font-size:16px; }
   .empty { color:var(--muted); padding:16px; text-align:center; font-size:14px; }
   .warn { background:#3a2a12; color:#ffcf8a; border-radius:14px; padding:12px 14px; font-size:14px; margin-bottom:14px; display:none; }
   #toast { position:fixed; left:16px; right:16px; bottom:calc(env(safe-area-inset-bottom) + 20px); background:#ff5d73; color:#fff; padding:14px 16px; border-radius:14px; font-weight:600;
@@ -239,6 +239,7 @@ function render() {
     const a = act(s.a), day = new Date(s.s).toDateString() === todayStr ? '' : 'yesterday · ';
     return '<div class="row"><span class="ic">' + a.icon + '</span><div class="tx"><div class="t1">' + a.label + '</div>' +
       '<div class="t2">' + day + clock(s.s) + '–' + clock(s.e) + '</div></div><span class="du">' + hm(s.e - s.s) + '</span>' +
+      (S.running && S.running[s.a] ? '' : '<button data-res="' + s.id + '" data-d="' + s.d + '" aria-label="Resume timer" title="Resume timer">↩</button>') +
       '<button data-del="' + s.id + '" data-d="' + s.d + '" aria-label="Delete">✕</button></div>';
   }).join('') : '<div class="empty">' + (loaded ? 'Nothing yet. Tap an activity to start.' : 'Loading…') + '</div>';
 }
@@ -323,6 +324,10 @@ async function tap(key) {
   } catch (e) { fail(e); refresh(); }
   finally { busy[key] = false; render(); }
 }
+async function resume(id, d) {
+  if (!confirm('Resume this timer from its original start? The saved entry goes back to running.')) return;
+  try { apply(await call('resume', d, id)); } catch (e) { fail(e); }
+}
 async function del(id, d) {
   if (!confirm('Delete this entry? Notion will be updated.')) return;
   try { apply(await call('del', d, id)); } catch (e) { fail(e); }
@@ -396,6 +401,7 @@ document.addEventListener('click', e => {
   const v = e.target.closest('[data-v]'); if (v) return setView(v.dataset.v);
   const ci = e.target.closest('[data-ci]'); if (ci) return ciTap(ci.dataset.ci, ci.dataset.val);
   const t = e.target.closest('[data-k]'); if (t) return tap(t.dataset.k);
+  const rs = e.target.closest('[data-res]'); if (rs) return resume(rs.dataset.res, rs.dataset.d);
   const d = e.target.closest('[data-del]'); if (d) return del(d.dataset.del, d.dataset.d);
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
