@@ -130,6 +130,7 @@
   .endsheet .esum { text-align:center; color:var(--muted); font-size:13px; margin:12px 0 14px; min-height:18px; }
   .endsheet .esum.bad { color:#ff5d73; font-weight:600; }
   .endsheet .btn:disabled { opacity:.4; }
+  .endsheet .btn.dan { justify-self:center; padding:4px 10px; margin-top:14px; font-size:12px; font-weight:500; opacity:.7; }
   .btns { display:grid; gap:10px; }
   .btn { border:0; border-radius:14px; padding:15px; font:inherit; font-weight:650; background:var(--card2); color:var(--text); }
   .btn.pri { background:#4f8cff; color:#fff; }
@@ -480,6 +481,7 @@ function askEnd(a, start, opt) {
     $('mSave').onclick = () => { if (end <= start) return; close(end === base() ? null : end); };
     $('mDrop').onclick = () => close('drop');
     $('mBack').onclick = () => close(undefined);
+    $('modal').onclick = e => { if (e.target === $('modal')) close(undefined); }; // click outside = back
     paint();
   });
 }
