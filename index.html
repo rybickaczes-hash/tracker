@@ -378,7 +378,7 @@ async function del(id, d) {
   try { apply(await call('del', d, id)); } catch (e) { fail(e); }
 }
 // ---- Evening check-in: every tap saves straight to today's Notion row (Diet, Suplementy, Nicotine, Review, Wordle).
-const REVIEW = [['Katastrofa', '#ff5d73'], ['Nic moc', '#ff8a3d'], ['Mid', '#ffd05c'], ['Spokojenej', '#4f8cff'], ['Peak', '#a66bff']];
+const REVIEW = [['Awful', '#ff5d73'], ['Bad', '#ff8a3d'], ['Mid', '#ffd05c'], ['Good', '#4f8cff'], ['Peak', '#a66bff']];
 const WORDLE = ['1', '2', '3', '4', '5', '6', 'Failed'];
 const SW = [
   ['diet', 'Diet', 'Stuck to the plan', '#5cc96b', 'img:diet.jpg'],
