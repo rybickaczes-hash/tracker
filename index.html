@@ -342,7 +342,7 @@ function render() {
   const todayStr = new Date(now()).toDateString();
   $('list').innerHTML = S.sessions.length ? S.sessions.map(s => {
     const a = act(s.a), day = new Date(s.s).toDateString() === todayStr ? '' : 'yesterday · ';
-    return '<div class="row"><span class="ic">' + a.icon + '</span><div class="tx"><div class="t1">' + a.label + '</div>' +
+    return '<div class="row" data-sid="' + s.id + '" data-sd="' + s.d + '" data-sa="' + s.a + '" data-ss="' + s.s + '" data-se="' + s.e + '"><span class="ic">' + a.icon + '</span><div class="tx"><div class="t1">' + a.label + '</div>' +
       '<div class="t2">' + day + clock(s.s) + '–' + clock(s.e) + '</div></div><span class="du">' + hm(s.e - s.s) + '</span>' +
       (S.running && S.running[s.a] ? '' : '<button data-res="' + s.id + '" data-d="' + s.d + '" aria-label="Resume timer" title="Resume timer">↩</button>') +
       '<button data-del="' + s.id + '" data-d="' + s.d + '" aria-label="Delete">✕</button></div>';
@@ -371,7 +371,8 @@ function makeDrum(el, values, fmt, onChange, label) {
   el.addEventListener('click', e => { if (el.dataset.swallow) { delete el.dataset.swallow; e.stopImmediatePropagation(); } }, true);
   return { set };
 }
-function askEnd(a, start) {
+function askEnd(a, start, opt) {
+  opt = opt || {};
   return new Promise(done => {
     const MIN = 60000, H = 44, pad = n => (n < 10 ? '0' : '') + n, base = () => Math.floor(now() / MIN) * MIN;
     const sameDay = (x, y) => new Date(x).toDateString() === new Date(y).toDateString();
@@ -398,7 +399,7 @@ function askEnd(a, start) {
       el.addEventListener('click', e => { if (el.dataset.swallow) { delete el.dataset.swallow; e.stopImmediatePropagation(); } }, true);
       return { set };
     }
-    let end = base(), openAgo = false, openClock = false, dAH = null, dAM = null, dH = null, dM = null;
+    let end = opt.end ? Math.min(opt.end, base()) : base(), openAgo = false, openClock = false, dAH = null, dAM = null, dH = null, dM = null;
     const maxAgo = () => Math.max(0, Math.round((base() - start) / MIN));
     const ago = () => Math.max(0, Math.round((base() - end) / MIN));
     const setEnd = ts => { end = Math.min(ts, base()); };
@@ -406,7 +407,8 @@ function askEnd(a, start) {
     const withDay = (ts, dayTs) => { const t = new Date(dayTs), d = new Date(ts); t.setHours(d.getHours(), d.getMinutes(), 0, 0); return t.getTime(); };
     // go to another day, keeping the time; if that lands before the start, end shortly after the start instead
     const goDay = dayTs => { let n = Math.min(withDay(end, dayTs), base()); if (n <= start) n = Math.min(start + 30 * MIN, base()); end = n; paint(); };
-    $('mT').innerHTML = a.icon + ' ' + a.label + ' <span>· running for ' + hm(now() - start) + '</span>';
+    $('mT').innerHTML = a.icon + ' ' + a.label + ' <span>· ' + (opt.edit ? 'edit when it ended' : 'running for ' + hm(now() - start)) + '</span>';
+    $('mBack').textContent = opt.edit ? 'Cancel' : 'Still running';
 
     function paintLeft() {
       const L = $('mL'), n = ago(), h = Math.floor(n / 60);
@@ -663,10 +665,29 @@ async function longPress(key) {
   } catch (e) { fail(e); refresh(); }
   finally { busy[key] = false; render(); }
 }
+// Long-press a saved entry: change when it ended (resume from its start, then stop at the new time).
+async function editSession(r) {
+  const key = r.dataset.sa, start = Number(r.dataset.ss), a = act(key);
+  if (S.running[key]) return toast('Stop the running ' + a.label + ' first.');
+  if (busy[key]) return;
+  const end = await askEnd(a, start, { edit: true, end: Number(r.dataset.se) });
+  if (end === undefined) return;
+  if (end === 'drop') return del(r.dataset.sid, r.dataset.sd);
+  busy[key] = true;
+  try { await call('resume', r.dataset.sd, r.dataset.sid); apply(await call('stop', key, end)); }
+  catch (e) { fail(e); refresh(); }
+  finally { busy[key] = false; render(); }
+}
 // Long-press a tile (about half a second).
 let lpTimer = null, lpFired = false, lpX = 0, lpY = 0;
 const lpClear = () => { clearTimeout(lpTimer); lpTimer = null; };
 document.addEventListener('pointerdown', e => {
+  const row = e.target.closest('.row[data-sid]');
+  if (row && !e.target.closest('button') && e.button <= 0) {
+    lpX = e.clientX; lpY = e.clientY; lpClear();
+    lpTimer = setTimeout(() => { lpTimer = null; if (navigator.vibrate) navigator.vibrate(15); editSession(row); }, 550);
+    return;
+  }
   const t = e.target.closest('[data-k]'); if (!t || e.button > 0) return;
   lpFired = false; lpX = e.clientX; lpY = e.clientY; lpClear();
   lpTimer = setTimeout(() => { lpFired = true; lpTimer = null; if (navigator.vibrate) navigator.vibrate(15); longPress(t.dataset.k); setTimeout(() => { lpFired = false; }, 700); }, 550);
