@@ -98,6 +98,35 @@
   .endsheet .eu { color:var(--muted); font-size:13px; margin-top:4px; min-height:20px; }
   .endsheet .elink { width:36px; display:flex; align-items:center; justify-content:center; }
   .endsheet .elink span { width:34px; height:34px; border-radius:50%; background:var(--card2); color:#ff8a3d; display:flex; align-items:center; justify-content:center; }
+  .endsheet .eu { background:none; border:0; font-family:inherit; padding:2px 6px; border-radius:8px; }
+  .endsheet button.eu { cursor:pointer; } .endsheet button.eu:hover { background:var(--card2); }
+  .endsheet .ewheels { display:flex; align-items:center; justify-content:center; gap:2px; width:100%; }
+  .endsheet .ewheel { position:relative; flex:1; min-width:0; }
+  .endsheet .eband { position:absolute; left:0; right:0; top:44px; height:44px; border-radius:12px; background:var(--card2); z-index:0; pointer-events:none; }
+  .endsheet .edrum { position:relative; z-index:1; height:132px; overflow-y:auto; scroll-snap-type:y mandatory; padding-block:44px; scrollbar-width:none; outline:0; border-radius:12px; overscroll-behavior:contain; touch-action:pan-y; cursor:grab; -webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent); mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent); }
+  .endsheet .edrum::-webkit-scrollbar { display:none; }
+  .endsheet .edrum:focus-visible { box-shadow:0 0 0 2px #4f8cff; }
+  .endsheet .eit { height:44px; scroll-snap-align:center; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:600; color:var(--muted); opacity:.55; user-select:none; -webkit-user-select:none; }
+  .endsheet .eit.on { font-size:36px; font-weight:700; color:var(--text); opacity:1; letter-spacing:-1px; }
+  .endsheet .ehalf.r .eit.on { color:#ff8a3d; }
+  .endsheet .ecolon { font-size:30px; font-weight:700; color:var(--muted); padding-bottom:4px; }
+  .endsheet .eagol { color:var(--muted); font-size:12px; text-align:center; margin-top:4px; }
+  .endsheet .eub { display:flex; gap:4px; justify-content:center; flex-wrap:wrap; }
+  .endsheet button.eu.add { color:var(--text); background:var(--card2); }
+  .endsheet button.eu.done, .endsheet button.eu.done:hover { background:#2fb86a; color:#04170c; font-weight:700; font-size:14px; padding:6px 18px; border-radius:10px; margin-top:6px; }
+  .endsheet .drums, .endsheet .agos { display:flex; align-items:center; justify-content:center; gap:2px; width:100%; }
+  .endsheet .colon { font-size:30px; font-weight:700; color:var(--muted); padding-bottom:4px; }
+  .endsheet .wheel { position:relative; flex:1; min-width:0; }
+  .endsheet .drum { position:relative; height:132px; overflow-y:auto; scroll-snap-type:y mandatory; padding-block:44px; scrollbar-width:none; flex:1; min-width:0; outline:0; border-radius:12px; overscroll-behavior:contain; touch-action:pan-y; cursor:grab; -webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent); mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent); z-index:1; }
+  .endsheet .drum::-webkit-scrollbar { display:none; }
+  .endsheet .it { height:44px; scroll-snap-align:center; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:600; color:var(--muted); opacity:.55; user-select:none; -webkit-user-select:none; }
+  .endsheet .it.on { font-size:36px; font-weight:700; color:#ff8a3d; opacity:1; letter-spacing:-1px; }
+  .endsheet .band { position:absolute; left:0; right:0; top:44px; height:44px; border-radius:12px; background:var(--card2); pointer-events:none; }
+  .endsheet .agol { color:var(--muted); font-size:12px; text-align:center; margin-top:4px; }
+  .endsheet .ub { display:flex; gap:4px; justify-content:center; flex-wrap:wrap; }
+  .endsheet button.unit { color:var(--text); background:var(--card2); border:0; font:inherit; font-size:13px; margin-top:4px; padding:4px 10px; border-radius:8px; cursor:pointer; }
+  .endsheet button.unit.done { background:#2fb86a; color:#04170c; font-weight:700; font-size:14px; padding:6px 18px; border-radius:10px; margin-top:6px; }
+  .endsheet .eread { cursor:pointer; }
   .endsheet .esum { text-align:center; color:var(--muted); font-size:13px; margin:12px 0 14px; min-height:18px; }
   .endsheet .esum.bad { color:#ff5d73; font-weight:600; }
   .endsheet .btn:disabled { opacity:.4; }
@@ -154,9 +183,9 @@
   <div class="elab"><span class="el">Ended</span><div class="edr"><div class="eseg" role="group" aria-label="Which day"><button type="button" id="mDy">Yesterday</button><button type="button" id="mDt">Today</button></div>
     <label class="ecal" aria-label="Pick a day"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg><input type="date" id="mCal" aria-label="Pick a day"></label></div></div>
   <div class="epair">
-    <div class="ehalf"><button type="button" class="eread" id="mAgoR" aria-label="Edit how long ago"></button><input type="number" min="0" step="1" inputmode="numeric" class="eread" id="mAgoI" hidden aria-label="Minutes ago"><div class="eu" id="mAgoU"></div></div>
+    <div class="ehalf" id="mL"></div>
     <div class="elink"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg></span></div>
-    <div class="ehalf"><input type="text" inputmode="numeric" maxlength="5" autocomplete="off" class="eread" id="mTime" aria-label="End time (24-hour, like 21:15)"><div class="eu" id="mAtU"></div></div>
+    <div class="ehalf" id="mR"></div>
   </div>
   <div class="esum" id="mSum"></div>
   <div class="btns">
@@ -321,53 +350,131 @@ function render() {
 }
 function tick() { document.querySelectorAll('[data-run]').forEach(el => { const r = Number(el.dataset.run); if (!r) return; if (r <= now() && el.closest('.wait')) return render(); el.textContent = runText(r); }); }
 
+// Scroll wheel (snap list): calls onChange(value) once it settles on a new row. Same feel as the Log screen.
+function makeDrum(el, values, fmt, onChange, label) {
+  const H = 44; let cur = null, timer = null, drag = null; const items = el.children;
+  el.setAttribute('role', 'spinbutton'); el.tabIndex = 0; el.setAttribute('aria-label', label);
+  el.innerHTML = values.map(v => '<div class="eit">' + fmt(v) + '</div>').join('');
+  const mark = i => { for (let k = 0; k < items.length; k++) items[k].classList.toggle('on', k === i); };
+  const idx = () => Math.max(0, Math.min(values.length - 1, Math.round(el.scrollTop / H)));
+  function set(v) { let i = values.indexOf(v); if (i < 0) i = 0; cur = values[i]; el.scrollTop = i * H; mark(i); }
+  el.addEventListener('scroll', () => { mark(idx()); clearTimeout(timer); timer = setTimeout(() => { const j = idx(); if (values[j] !== cur) { cur = values[j]; onChange(cur); } }, 110); });
+  el.addEventListener('click', e => { const it = e.target.closest('.eit'); if (it) el.scrollTo({ top: Array.prototype.indexOf.call(items, it) * H, behavior: 'smooth' }); });
+  el.addEventListener('keydown', e => {
+    const d = e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : e.key === 'PageUp' ? -6 : e.key === 'PageDown' ? 6 : 0; if (!d) return; e.preventDefault();
+    el.scrollTo({ top: Math.max(0, Math.min(values.length - 1, idx() + d)) * H, behavior: 'smooth' });
+  });
+  el.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') { drag = { y: e.clientY, top: el.scrollTop, moved: false }; el.style.scrollSnapType = 'none'; el.setPointerCapture(e.pointerId); } });
+  el.addEventListener('pointermove', e => { if (drag) { const dy = e.clientY - drag.y; if (Math.abs(dy) > 3) drag.moved = true; el.scrollTop = drag.top - dy; } });
+  const stop = () => { if (!drag) return; const moved = drag.moved; drag = null; el.style.scrollSnapType = ''; el.scrollTo({ top: idx() * H, behavior: 'smooth' }); if (moved) el.dataset.swallow = '1'; };
+  el.addEventListener('pointerup', stop); el.addEventListener('pointercancel', stop);
+  el.addEventListener('click', e => { if (el.dataset.swallow) { delete el.dataset.swallow; e.stopImmediatePropagation(); } }, true);
+  return { set };
+}
 function askEnd(a, start) {
   return new Promise(done => {
-    const MIN = 60000, pad = n => (n < 10 ? '0' : '') + n, base = () => Math.floor(now() / MIN) * MIN;
-    const dayStart = ts => { const d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime(); };
+    const MIN = 60000, H = 44, pad = n => (n < 10 ? '0' : '') + n, base = () => Math.floor(now() / MIN) * MIN;
     const sameDay = (x, y) => new Date(x).toDateString() === new Date(y).toDateString();
     const hmm = ts => { const d = new Date(ts); return d.getHours() + ':' + pad(d.getMinutes()); };
     const dlong = m => { const h = Math.floor(m / 60), r = m % 60; return h ? (r ? h + ' h ' + r + ' min' : h + ' h') : m + ' min'; };
-    let end = base(), editAgo = false;
-    $('mT').innerHTML = a.icon + ' ' + a.label + ' <span>· running for ' + hm(now() - start) + '</span>';
+    const ymdOf = ts => { const d = new Date(ts); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+    const range = n => Array.from({ length: n }, (_, i) => i);
+    // sliding wheel (same as the Log screen): scroll-snap list, calls onChange(value) once it settles
+    function Drum(el, values, fmt, onChange, label) {
+      let cur = null, timer = null; const items = el.children;
+      el.setAttribute('role', 'spinbutton'); el.tabIndex = 0; el.setAttribute('aria-label', label);
+      el.innerHTML = values.map(v => '<div class="it">' + fmt(v) + '</div>').join('');
+      const mark = i => { for (let k = 0; k < items.length; k++) { const on = k === i; if (items[k].classList.contains('on') !== on) items[k].classList.toggle('on', on); } };
+      const idxNow = () => Math.max(0, Math.min(values.length - 1, Math.round(el.scrollTop / H)));
+      const set = v => { let i = values.indexOf(v); if (i < 0) i = 0; cur = values[i]; el.scrollTop = i * H; mark(i); };
+      el.addEventListener('scroll', () => { mark(idxNow()); clearTimeout(timer); timer = setTimeout(() => { const j = idxNow(); if (values[j] !== cur) { cur = values[j]; onChange(cur); } }, 110); });
+      el.addEventListener('click', e => { const it = e.target.closest('.it'); if (it) el.scrollTo({ top: Array.prototype.indexOf.call(items, it) * H, behavior: 'smooth' }); });
+      el.addEventListener('keydown', e => { const d = e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0; if (!d) return; e.preventDefault(); el.scrollTo({ top: Math.max(0, Math.min(values.length - 1, idxNow() + d)) * H, behavior: 'smooth' }); });
+      let drag = null; // mouse drag (touch scrolls natively)
+      el.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') { drag = { y: e.clientY, top: el.scrollTop, moved: false }; el.style.scrollSnapType = 'none'; el.setPointerCapture(e.pointerId); } });
+      el.addEventListener('pointermove', e => { if (drag) { const dy = e.clientY - drag.y; if (Math.abs(dy) > 3) drag.moved = true; el.scrollTop = drag.top - dy; } });
+      const endDrag = () => { if (!drag) return; const m = drag.moved; drag = null; el.style.scrollSnapType = ''; el.scrollTo({ top: idxNow() * H, behavior: 'smooth' }); if (m) el.dataset.swallow = '1'; };
+      el.addEventListener('pointerup', endDrag); el.addEventListener('pointercancel', endDrag);
+      el.addEventListener('click', e => { if (el.dataset.swallow) { delete el.dataset.swallow; e.stopImmediatePropagation(); } }, true);
+      return { set };
+    }
+    let end = base(), openAgo = false, openClock = false, dAH = null, dAM = null, dH = null, dM = null;
+    const maxAgo = () => Math.max(0, Math.round((base() - start) / MIN));
+    const ago = () => Math.max(0, Math.round((base() - end) / MIN));
     const setEnd = ts => { end = Math.min(ts, base()); };
+    const setAgo = n => { end = base() - Math.max(0, Math.min(maxAgo(), n)) * MIN; paint(); };
     const withDay = (ts, dayTs) => { const t = new Date(dayTs), d = new Date(ts); t.setHours(d.getHours(), d.getMinutes(), 0, 0); return t.getTime(); };
+    // go to another day, keeping the time; if that lands before the start, end shortly after the start instead
+    const goDay = dayTs => { let n = Math.min(withDay(end, dayTs), base()); if (n <= start) n = Math.min(start + 30 * MIN, base()); end = n; paint(); };
+    $('mT').innerHTML = a.icon + ' ' + a.label + ' <span>· running for ' + hm(now() - start) + '</span>';
+
+    function paintLeft() {
+      const L = $('mL'), n = ago(), h = Math.floor(n / 60);
+      if (!openAgo) {
+        if (L.dataset.mode !== 'read') {
+          L.dataset.mode = 'read';
+          L.innerHTML = '<button class="eread" type="button" id="mAgoR" aria-label="Edit how long ago"></button><button class="eu" type="button" id="mAgoU" style="background:none;border:0;font-family:inherit;cursor:pointer"></button>';
+          const go = () => { openAgo = true; paint(); };
+          $('mAgoR').onclick = go; $('mAgoU').onclick = go;
+        }
+        $('mAgoR').textContent = n === 0 ? 'now' : h >= 48 ? Math.floor(h / 24) + 'd ' + (h % 24) + 'h' : h ? h + 'h ' + pad(n % 60) : String(n);
+        $('mAgoU').textContent = (n === 0 ? 'right now' : h ? 'ago' : 'min ago') + ' · tap to edit';
+      } else {
+        if (L.dataset.mode !== 'wheels') {
+          L.dataset.mode = 'wheels';
+          L.innerHTML = '<div class="agos"><div class="wheel" id="mHW"><div class="band"></div><div class="drum" id="mAH"></div></div><div class="wheel"><div class="band"></div><div class="drum" id="mAM"></div></div></div>' +
+            '<div class="agol" id="mAgoL"></div><div class="ub"><button class="unit" type="button" id="mAddH">＋ Add hours</button><button class="unit done" type="button" id="mADone">Done</button></div>';
+          dAH = Drum($('mAH'), range(Math.floor(maxAgo() / 60) + 1), String, v => setAgo(v * 60 + ago() % 60), 'Hours ago');
+          dAM = Drum($('mAM'), range(60), String, v => setAgo(Math.floor(ago() / 60) * 60 + v), 'Minutes ago');
+          $('mAddH').onclick = () => { if (ago() < 60) setAgo(ago() + 60); };
+          $('mADone').onclick = () => { openAgo = false; paint(); };
+        }
+        $('mHW').hidden = h === 0; $('mAddH').hidden = h > 0 || maxAgo() < 60;
+        $('mAgoL').textContent = h > 0 ? 'hours · minutes ago' : (n === 0 ? 'minutes ago · now' : 'minutes ago');
+        dAH.set(h); dAM.set(n % 60);
+      }
+    }
+    function paintRight() {
+      const R = $('mR'), d = new Date(end), today = sameDay(end, base()), yest = sameDay(end, base() - 86400000);
+      if (!openClock) {
+        if (R.dataset.mode !== 'read') {
+          R.dataset.mode = 'read';
+          R.innerHTML = '<button class="eread" type="button" id="mClkR" aria-label="Edit end time"></button><button class="eu" type="button" id="mAtU" style="background:none;border:0;font-family:inherit;cursor:pointer"></button>';
+          const go = () => { openClock = true; paint(); };
+          $('mClkR').onclick = go; $('mAtU').onclick = go;
+        }
+        $('mClkR').textContent = hmm(end);
+        $('mAtU').textContent = (today ? 'ended' : yest ? 'yesterday' : d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })) + ' · tap to edit';
+      } else {
+        if (R.dataset.mode !== 'drums') {
+          R.dataset.mode = 'drums';
+          R.innerHTML = '<div class="drums"><div class="wheel"><div class="band"></div><div class="drum" id="mCH"></div></div><div class="colon">:</div><div class="wheel"><div class="band"></div><div class="drum" id="mCM"></div></div></div><button class="unit done" type="button" id="mCDone">Done</button>';
+          const commit = (hh, mm) => { const t = new Date(end); t.setHours(hh, mm, 0, 0); let ms = t.getTime(); if (ms > base()) ms -= 86400000; end = ms; paint(); };
+          dH = Drum($('mCH'), range(24), String, v => commit(v, new Date(end).getMinutes()), 'Hour');
+          dM = Drum($('mCM'), range(60), pad, v => commit(new Date(end).getHours(), v), 'Minute');
+          $('mCDone').onclick = () => { openClock = false; paint(); };
+        }
+        dH.set(d.getHours()); dM.set(d.getMinutes());
+      }
+    }
     function paint() {
-      const ago = Math.max(0, Math.round((base() - end) / MIN)), h = Math.floor(ago / 60);
-      const R = $('mAgoR'), I = $('mAgoI');
-      R.hidden = editAgo; I.hidden = !editAgo;
-      R.textContent = ago === 0 ? 'now' : h >= 48 ? Math.floor(h / 24) + 'd ' + (h % 24) + 'h' : h ? h + 'h ' + pad(ago % 60) : String(ago);
-      if (editAgo) { if (document.activeElement !== I) I.value = ago; }
-      $('mAgoU').textContent = (ago === 0 ? 'right now' : h ? 'ago' : 'min ago') + ' · tap to edit';
-      if (document.activeElement !== $('mTime')) $('mTime').value = pad(new Date(end).getHours()) + ':' + pad(new Date(end).getMinutes());
+      paintLeft(); paintRight();
       const today = sameDay(end, base()), yest = sameDay(end, base() - 86400000);
-      $('mAtU').textContent = (today ? 'ended' : yest ? 'yesterday' : new Date(end).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })) + ' · tap to edit';
       $('mDt').setAttribute('aria-pressed', today); $('mDy').setAttribute('aria-pressed', yest);
-      $('mDy').disabled = dayStart(base() - 86400000) + 86400000 <= start; // started today: yesterday is before the start
+      $('mDy').disabled = sameDay(start, base()); // started today: it can't have ended yesterday
+      $('mDy').title = $('mDy').disabled ? 'It started today' : '';
       $('mCal').min = ymdOf(start); $('mCal').max = ymdOf(base()); $('mCal').value = ymdOf(end);
       const bad = end <= start;
       $('mSum').className = 'esum' + (bad ? ' bad' : '');
       $('mSum').textContent = bad ? 'The end is before the start' : hmm(start) + ' – ' + hmm(end) + ' · ' + dlong(Math.round((end - start) / MIN));
       $('mSave').disabled = bad;
     }
-    const ymdOf = ts => { const d = new Date(ts); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+    $('mL').dataset.mode = ''; $('mR').dataset.mode = ''; $('mL').innerHTML = ''; $('mR').innerHTML = '';
     $('modal').classList.add('show');
     const close = v => { $('modal').classList.remove('show'); done(v); };
-    $('mAgoR').onclick = () => { editAgo = true; paint(); $('mAgoI').focus(); $('mAgoI').select(); };
-    $('mAgoI').oninput = () => { const v = Math.max(0, Math.min(336 * 60 - 1, Math.round(Number($('mAgoI').value) || 0))); setEnd(base() - v * MIN); paint(); };
-    $('mAgoI').onblur = () => { editAgo = false; paint(); };
-    $('mAgoI').onkeydown = e => { if (e.key === 'Enter') $('mAgoI').blur(); };
-    $('mTime').oninput = () => {
-      const t = ($('mTime').value || '').trim().match(/^(\d{1,2})\s*[:.]?\s*(\d{2})$/); if (!t) return;
-      const h = +t[1], m = +t[2]; if (h > 23 || m > 59) return;
-      const d = new Date(end); d.setHours(h, m, 0, 0); let ms = d.getTime(); if (ms > base()) ms -= 86400000;
-      end = ms; paint();
-    };
-    $('mTime').onblur = () => paint();
-    $('mTime').onfocus = () => $('mTime').select();
-    $('mDt').onclick = () => { setEnd(withDay(end, base())); paint(); };
-    $('mDy').onclick = () => { if (!$('mDy').disabled) { setEnd(withDay(end, base() - 86400000)); paint(); } };
-    $('mCal').onchange = () => { const v = $('mCal').value; if (!v) return; const p = v.split('-'); setEnd(withDay(end, new Date(+p[0], +p[1] - 1, +p[2]).getTime())); paint(); };
+    $('mDt').onclick = () => goDay(base());
+    $('mDy').onclick = () => { if (!$('mDy').disabled) goDay(base() - 86400000); };
+    $('mCal').onchange = () => { const v = $('mCal').value; if (!v) return; const p = v.split('-'); goDay(new Date(+p[0], +p[1] - 1, +p[2]).getTime()); };
     $('mSave').onclick = () => { if (end <= start) return; close(end === base() ? null : end); };
     $('mDrop').onclick = () => close('drop');
     $('mBack').onclick = () => close(undefined);
