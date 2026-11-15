@@ -453,12 +453,22 @@ async function refresh() {
   if (VIEW === 'c') refreshCi();
 }
 
+let lastPtr = '';
+document.addEventListener('pointerdown', e => { lastPtr = e.pointerType; }, true);
 document.addEventListener('click', e => {
   const w = e.target.closest('[data-who]');
   if (w) { WHO = w.dataset.who; lsSet('who', WHO); S = JSON.parse(lsGet('state:' + WHO) || 'null') || { now: Date.now(), running: {}, sessions: [], sync: null }; loaded = false; CI = null; CID = null; ciLoading = false; ciMsg = ''; $('app').innerHTML = ''; render(); return refresh(); }
   if (e.target.id === 'switch') { if (confirm('Switch to the other person?')) { WHO = null; lsSet('who', ''); $('app').innerHTML = ''; render(); } return; }
   if (e.target.closest('#logbtn')) return Log.open();
-  if (e.target.closest('#daybtn')) { const i = $('cidate'); if (e.target !== i) { e.preventDefault(); try { i.showPicker ? i.showPicker() : i.click(); } catch (err) { i.focus(); } } return; }
+  if (e.target.closest('#daybtn')) {
+    // Phones open their own date wheel when the (invisible) field is tapped; on a computer the browser only
+    // opens it from a tiny icon, so open it ourselves wherever the button was clicked.
+    const i = $('cidate');
+    if (e.target === i && lastPtr === 'touch') return;
+    e.preventDefault();
+    try { if (i.showPicker) { i.showPicker(); return; } } catch (err) {}
+    i.focus(); return;
+  }
   if (e.target.closest('[data-ciday]')) return setCiDay(null);
   const v = e.target.closest('[data-v]'); if (v) return setView(v.dataset.v);
   const ci = e.target.closest('[data-ci]'); if (ci) return ciTap(ci.dataset.ci, ci.dataset.val);
