@@ -11,6 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="log.css">
 <title>Tracker</title>
 <style>
   :root { --bg:#0f1115; --card:#1a1d24; --card2:#22262f; --text:#e9edf3; --muted:#8b93a3; --line:#2a2f39; }
@@ -96,6 +97,12 @@
   .cimsg { text-align:center; color:var(--muted); font-size:13px; margin-top:28px; min-height:18px; }
   .foot { text-align:center; margin-top:28px; }
   .foot button { border:0; background:none; color:var(--muted); font:inherit; font-size:13px; text-decoration:underline; }
+  .trow { display:flex; gap:8px; align-items:stretch; margin:0 0 18px; }
+  .trow .tabs { flex:1; margin:0; }
+  .logbtn { border:0; border-radius:14px; background:#4f8cff; color:#07101f; font:inherit; font-weight:700; font-size:15px; padding:0 16px; white-space:nowrap; }
+  .logbtn:active { transform:scale(.96); }
+  .tile { -webkit-touch-callout:none; }
+  #toast.ok { background:#2fb86a; color:#04170c; }
   .setup { min-height:70vh; display:flex; flex-direction:column; justify-content:center; gap:14px; }
   .setup .btn { font-size:20px; padding:18px; }
 </style>
@@ -103,6 +110,7 @@
 <body>
 <div id="app"></div>
 <div id="toast"></div>
+<div id="logov" hidden></div>
 <div class="modal" id="modal"><div class="sheet">
   <h3 id="mT"></h3><p>When did you finish?</p>
   <input type="time" id="mTime">
@@ -191,7 +199,7 @@ async function call(fn, ...args) {
   if (!j.ok) throw new Error(j.error || 'error');
   return j.state;
 }
-function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 3500); }
+function toast(msg, ok) { const t = $('toast'); t.textContent = msg; t.classList.toggle('ok', !!ok); t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 3500); }
 function apply(st) { S = st; offset = st.now - Date.now(); loaded = true; lsSet('state:' + WHO, JSON.stringify(st)); render(); }
 function fail(e) { toast('That didn’t work — check your internet and try again.'); console.error(e); }
 
@@ -208,7 +216,7 @@ function render() {
   if (!API || !WHO) return setupScreen();
   if (!$('grid')) {
     $('app').innerHTML = '<header><h1 id="hi"></h1><span class="date" id="date"></span></header>' +
-      '<div class="tabs" id="tabs"><button data-v="t">Timers</button><button data-v="c">Check-in</button></div>' +
+      '<div class="trow"><div class="tabs" id="tabs"><button data-v="t">Timers</button><button data-v="c">Check-in</button></div><button class="logbtn" id="logbtn" aria-label="Log an activity afterwards">＋ Log</button></div>' +
       '<div id="vt"><div class="warn" id="warn">The last save to Notion failed — retrying in a few minutes.</div>' +
       '<div id="grid"></div><h2>Today &amp; yesterday</h2><div class="list" id="list"></div></div>' +
       '<div id="vc"></div>' +
@@ -398,12 +406,24 @@ document.addEventListener('click', e => {
   const w = e.target.closest('[data-who]');
   if (w) { WHO = w.dataset.who; lsSet('who', WHO); S = JSON.parse(lsGet('state:' + WHO) || 'null') || { now: Date.now(), running: {}, sessions: [], sync: null }; loaded = false; CI = null; ciMsg = ''; $('app').innerHTML = ''; render(); return refresh(); }
   if (e.target.id === 'switch') { if (confirm('Switch to the other person?')) { WHO = null; lsSet('who', ''); $('app').innerHTML = ''; render(); } return; }
+  if (e.target.closest('#logbtn')) return Log.open();
   const v = e.target.closest('[data-v]'); if (v) return setView(v.dataset.v);
   const ci = e.target.closest('[data-ci]'); if (ci) return ciTap(ci.dataset.ci, ci.dataset.val);
-  const t = e.target.closest('[data-k]'); if (t) return tap(t.dataset.k);
+  const t = e.target.closest('[data-k]'); if (t) { if (lpFired) { lpFired = false; return; } return tap(t.dataset.k); }
   const rs = e.target.closest('[data-res]'); if (rs) return resume(rs.dataset.res, rs.dataset.d);
   const d = e.target.closest('[data-del]'); if (d) return del(d.dataset.del, d.dataset.d);
 });
+// Long-press a tile (about half a second): open the Log screen with that activity selected.
+let lpTimer = null, lpFired = false, lpX = 0, lpY = 0;
+const lpClear = () => { clearTimeout(lpTimer); lpTimer = null; };
+document.addEventListener('pointerdown', e => {
+  const t = e.target.closest('[data-k]'); if (!t || e.button > 0) return;
+  lpFired = false; lpX = e.clientX; lpY = e.clientY; lpClear();
+  lpTimer = setTimeout(() => { lpFired = true; lpTimer = null; if (navigator.vibrate) navigator.vibrate(15); Log.open(t.dataset.k); setTimeout(() => { lpFired = false; }, 700); }, 550);
+});
+document.addEventListener('pointermove', e => { if (lpTimer && Math.hypot(e.clientX - lpX, e.clientY - lpY) > 10) lpClear(); });
+['pointerup', 'pointercancel'].forEach(n => document.addEventListener(n, lpClear));
+document.addEventListener('contextmenu', e => { if (e.target.closest('[data-k]')) e.preventDefault(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
 setInterval(tick, 1000); setInterval(refresh, 60000);
 // Updates: check for a new version on every open and reload straight into it (no second launch needed).
@@ -418,5 +438,6 @@ if ('serviceWorker' in navigator) {
 }
 render(); refresh();
 </script>
+<script src="log.js"></script>
 </body>
 </html>
