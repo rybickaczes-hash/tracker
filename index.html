@@ -132,6 +132,20 @@
   .endsheet .btn:disabled { opacity:.4; }
   .endsheet .btn.dan { justify-self:center; padding:4px 10px; margin-top:14px; font-size:12px; font-weight:500; opacity:.7; }
   .btns { display:grid; gap:10px; }
+  /* compact popups */
+  .sheet { padding:14px 14px calc(env(safe-area-inset-bottom) + 14px); }
+  .sheet h3 { font-size:17px; margin-bottom:4px; }
+  .sheet p { margin-bottom:10px; font-size:14px; }
+  .sheet select { font-size:20px; padding:10px; margin-bottom:10px; }
+  .sheet .btns { gap:6px; } .sheet .btn { padding:10px; font-size:15px; border-radius:12px; }
+  @media (min-width:700px) { .sheet { width:320px; } .endsheet { width:360px; } }
+  .endsheet { padding-top:12px; }
+  .endsheet .et { font-size:14px; margin-bottom:8px; }
+  .endsheet .elab { margin-bottom:6px; }
+  .endsheet .epair { padding:6px 8px 8px; border-radius:16px; }
+  .endsheet .eread, .endsheet input.eread { height:64px; font-size:30px; }
+  .endsheet .esum { margin:8px 0 8px; }
+  .endsheet .btn.dan { margin-top:6px; }
   .btn { border:0; border-radius:14px; padding:15px; font:inherit; font-weight:650; background:var(--card2); color:var(--text); }
   .btn.pri { background:#4f8cff; color:#fff; }
   .btn.dan { background:transparent; color:#ff5d73; }
@@ -496,6 +510,7 @@ function pick(o) {
     $('pOk').onclick = () => close(Number($('pSel').value));
     $('pDrop').onclick = () => close('drop');
     $('pBack').onclick = () => close(undefined);
+    $('pick').onclick = e => { if (e.target === $('pick')) close(undefined); };
   });
 }
 
