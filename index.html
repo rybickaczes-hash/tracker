@@ -228,6 +228,7 @@ const ALL = {
   study:    { label: 'Study', icon: '📚', color: '#a66bff' },
   sleep:    { label: 'Sleep', icon: '😴', color: '#3fb7a6', byEnd: true },
   mace:     { label: 'Macebell', icon: '🏏', color: '#ff8a3d' },
+  cali:     { label: 'Calisthenics', icon: '💪', color: '#ff8a3d' },
   func:     { label: 'Functional', icon: '🤸', color: '#ff5d73' },
   volley:   { label: 'Volleyball', icon: '🏐', color: '#f2c94c' },
   football: { label: 'Football', icon: '⚽', color: '#5cc96b' },
@@ -249,13 +250,13 @@ const ALL = {
 const GROUPS = {
   lukas: [
     { title: 'Basics', color: '#3fb7a6', keys: ['travel', 'house', 'care', 'sleep', 'work'] },
-    { title: 'Fitness', color: '#ff8a3d', keys: ['gym', 'func', 'run', 'walk', 'mace', 'volley'] },
+    { title: 'Fitness', color: '#ff8a3d', keys: ['gym', 'func', 'cali', 'run', 'walk', 'mace', 'volley'] },
     { title: 'Improvement', color: '#a66bff', keys: ['read', 'bstudy', 'pstudy', 'sstudy', 'oimprove'] },
     { title: 'Optional', color: '#ff5d73', keys: ['friends', 'waste'] },
   ],
   michal: [
     { title: 'Basics', color: '#3fb7a6', keys: ['sleep', 'read', 'study'] },
-    { title: 'Sport', color: '#ff8a3d', keys: ['football'] },
+    { title: 'Sport', color: '#ff8a3d', keys: ['cali', 'football'] },
   ],
 };
 function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
