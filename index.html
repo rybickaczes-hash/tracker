@@ -170,6 +170,7 @@
   .wd { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:10px; }
   .wd button { height:58px; border:0; border-radius:14px; background:var(--card2); color:var(--text); font:inherit; font-size:18px; font-weight:650; padding:0; }
   .wd button.on { background:#3fb7a6; color:#0b0d10; font-weight:700; }
+  .wt { display:flex; align-items:center; gap:10px; } .wt input { flex:1; min-width:0; font:inherit; font-size:24px; font-weight:650; text-align:center; padding:12px; border-radius:14px; border:1px solid var(--line,#2a2f3a); background:var(--card2); color:var(--text); } .wt span { color:var(--muted); font-weight:600; } .wt .btn { padding:13px 20px; background:#4f8cff; color:#07101f; }
   .cimsg { text-align:center; color:var(--muted); font-size:13px; margin-top:28px; min-height:18px; }
   .foot { text-align:center; margin-top:28px; }
   .foot button { border:0; background:none; color:var(--muted); font:inherit; font-size:13px; text-decoration:underline; }
@@ -585,7 +586,7 @@ function ciDayLabel(d, long) {
   if (d === ymd(now() - 86400000)) return 'Yesterday';
   return new Date(d + 'T12:00:00').toLocaleDateString('en-GB', long ? { weekday: 'long', day: 'numeric', month: 'long' } : { day: 'numeric', month: 'short' });
 }
-const ciBlank = () => ({ date: ciDay(), diet: false, supp: false, quit: false, review: null, wordle: null });
+const ciBlank = () => ({ date: ciDay(), diet: false, supp: false, quit: false, review: null, wordle: null, weight: null });
 function ciCache() {
   if (CI && CI.date === ciDay()) return CI;
   if (!CID) try { const c = JSON.parse(lsGet('ci:' + WHO) || 'null'); if (c && c.date === ymd(now())) return (CI = c); } catch (e) {}
@@ -606,7 +607,8 @@ function renderCi() {
     '<div' + (ciLoading ? ' style="opacity:.4;pointer-events:none"' : '') + '><div class="ci">' + rows + '</div>' +
     '<div class="lab">How was your day?</div><div class="rev">' + rev + '</div>' +
     '<div class="revname' + (c.review ? '' : ' none') + '">' + (c.review || 'Tap how it went') + '</div>' +
-    '<div class="lab">Wordle</div><div class="wd">' + wd + '</div></div>' +
+    '<div class="lab">Wordle</div><div class="wd">' + wd + '</div>' +
+    (WHO === 'michal' ? '<div class="lab">Weight</div><div class="wt"><input id="wtin" type="text" inputmode="decimal" placeholder="kg" value="' + (c.weight != null ? String(c.weight).replace('.', ',') : '') + '" aria-label="Weight in kg"><span>kg</span><button class="btn" id="wtsave">Save</button></div>' : '') + '</div>' +
     '<div class="cimsg">' + (ciLoading ? 'Loading…' : ciMsg) + '</div>';
 }
 async function ciTap(field, val) {
@@ -620,6 +622,16 @@ async function ciTap(field, val) {
   ciMsg = 'Saving…'; if (!day) lsSet('ci:' + WHO, JSON.stringify(CI)); renderCi();
   ciPending++;
   try { const r = await call('ciSet', field, nv, day); if (day === CID) { if (r && r.ci && r.ci.streak != null) CI.streak = r.ci.streak; if (!day) lsSet('ci:' + WHO, JSON.stringify(CI)); } ciPending--; if (!ciPending) { ciMsg = 'Saved to Notion'; if (VIEW === 'c') renderCi(); } }
+  catch (e) { ciPending--; ciMsg = ''; fail(e); refreshCi(true); }
+}
+async function saveWeight() {
+  const inp = $('wtin'); if (!inp) return;
+  const raw = inp.value.trim().replace(',', '.'), kg = Number(raw);
+  if (raw && !(kg >= 30 && kg <= 300)) return toast('Enter your weight in kg, e.g. 78,5');
+  const c = ciCache() || (CI = ciBlank()); const day = CID;
+  c.weight = raw ? Math.round(kg * 10) / 10 : null; if (!day) lsSet('ci:' + WHO, JSON.stringify(c));
+  ciMsg = 'Saving…'; renderCi(); ciPending++;
+  try { await call('ciSet', 'weight', c.weight, day); ciPending--; if (!ciPending) { ciMsg = 'Saved to Notion'; if (VIEW === 'c') renderCi(); } }
   catch (e) { ciPending--; ciMsg = ''; fail(e); refreshCi(true); }
 }
 async function refreshCi(force) {
@@ -644,6 +656,7 @@ async function refresh() {
   if (VIEW === 'c') refreshCi();
 }
 
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'wtin') { e.preventDefault(); saveWeight(); e.target.blur(); } });
 let lastPtr = '';
 document.addEventListener('pointerdown', e => { lastPtr = e.pointerType; }, true);
 document.addEventListener('click', e => {
@@ -662,6 +675,7 @@ document.addEventListener('click', e => {
   }
   if (e.target.closest('[data-ciday]')) return setCiDay(null);
   const v = e.target.closest('[data-v]'); if (v) return setView(v.dataset.v);
+  if (e.target.id === 'wtsave') return saveWeight();
   const ci = e.target.closest('[data-ci]'); if (ci) return ciTap(ci.dataset.ci, ci.dataset.val);
   const t = e.target.closest('[data-k]'); if (t) { if (lpFired) { lpFired = false; return; } return tap(t.dataset.k); }
   const rs = e.target.closest('[data-res]'); if (rs) return resume(rs.dataset.res, rs.dataset.d);
