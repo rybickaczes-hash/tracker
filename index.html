@@ -173,6 +173,7 @@
   .wt { display:flex; align-items:center; gap:10px; } .wt input { flex:1; min-width:0; font:inherit; font-size:24px; font-weight:650; text-align:center; padding:12px; border-radius:14px; border:1px solid var(--line,#2a2f3a); background:var(--card2); color:var(--text); } .wt span { color:var(--muted); font-weight:600; } .wt .btn { padding:13px 20px; background:#4f8cff; color:#07101f; }
   .cimsg { text-align:center; color:var(--muted); font-size:13px; margin-top:28px; min-height:18px; }
   .foot { text-align:center; margin-top:28px; }
+  .foot.top { margin:10px 0 0; } .foot.top + h2 { margin-top:14px; }
   .foot button { border:0; background:none; color:var(--muted); font:inherit; font-size:13px; text-decoration:underline; }
   .trow { display:flex; gap:8px; align-items:stretch; margin:0 0 18px; }
   .trow .tabs { flex:1; margin:0; }
@@ -326,7 +327,7 @@ function render() {
       '<label class="logbtn daybtn" id="daybtn" style="display:none"><span id="daylbl">Today</span><input type="date" id="cidate" aria-label="Choose a day"></label></div>' +
       '<div id="vt"><div class="warn" id="warn">The last save to Notion failed — retrying in a few minutes.</div>' +
       '<div id="buddy"></div>' +
-      '<div id="grid"></div><h2>Today &amp; yesterday</h2><div class="list" id="list"></div></div>' +
+      '<div id="grid"></div><div class="foot top"><button data-switch="1">Not ' + NAMES[WHO] + '? Switch</button></div><h2>Today &amp; yesterday</h2><div class="list" id="list"></div></div>' +
       '<div id="vc"></div>' +
       '<div class="foot"><button id="switch">Not ' + NAMES[WHO] + '? Switch</button></div>';
   }
@@ -663,7 +664,7 @@ document.addEventListener('pointerdown', e => { lastPtr = e.pointerType; }, true
 document.addEventListener('click', e => {
   const w = e.target.closest('[data-who]');
   if (w) { WHO = w.dataset.who; lsSet('who', WHO); S = JSON.parse(lsGet('state:' + WHO) || 'null') || { now: Date.now(), running: {}, sessions: [], sync: null }; loaded = false; CI = null; CID = null; ciLoading = false; ciMsg = ''; $('app').innerHTML = ''; render(); return refresh(); }
-  if (e.target.id === 'switch') { if (confirm('Switch to the other person?')) { WHO = null; lsSet('who', ''); $('app').innerHTML = ''; render(); } return; }
+  if (e.target.id === 'switch' || e.target.dataset.switch) { if (confirm('Switch to the other person?')) { WHO = null; lsSet('who', ''); $('app').innerHTML = ''; render(); } return; }
   if (e.target.closest('#logbtn')) return Log.open();
   if (e.target.closest('#daybtn')) {
     // Phones open their own date wheel when the (invisible) field is tapped; on a computer the browser only
