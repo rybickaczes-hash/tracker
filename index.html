@@ -353,7 +353,7 @@ function render() {
   if (VIEW === 'c') renderCi();
   $('buddy').innerHTML = buddyHtml(S.other);
   const live = Object.keys(S.running || {}).filter(k => ALL[k] && S.running[k] <= now());
-  $('nowbar').innerHTML = live.map(k => { const a = act(k); return '<button class="nowrow" data-nowgo="1" style="--c:' + (a.color || '#4f8cff') + '"><span class="dot"></span><span>' + a.icon + ' ' + a.label + '</span><b data-run="' + S.running[k] + '">' + runText(S.running[k]) + '</b></button>'; }).join('');
+  $('nowbar').innerHTML = live.map(k => { const a = act(k); const old = k !== 'sleep' && now() - S.running[k] > 3 * 3600000; return '<button class="nowrow' + (old ? ' old' : '') + '" data-nowgo="1" style="--c:' + (old ? '#ff8a3d' : (a.color || '#4f8cff')) + '"><span class="dot"></span><span>' + a.icon + ' ' + a.label + (old ? ' · still running?' : '') + '</span><b data-run="' + S.running[k] + '">' + runText(S.running[k]) + '</b></button>'; }).join('');
   const today = ymd(now());
   $('grid').innerHTML = (GROUPS[WHO] || []).map(g => {
     const tiles = g.keys.map(k => {
